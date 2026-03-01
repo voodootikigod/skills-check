@@ -11,7 +11,7 @@ export function Header() {
 				<div className={styles.links}>
 					<Link href="/docs">Docs</Link>
 					<a
-						href="https://github.com/vercel/skill-versions"
+						href="https://github.com/voodootikigod/skill-versions"
 						target="_blank"
 						rel="noopener noreferrer"
 					>
