@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import styles from "./docs.module.css";
 
-export const metadata = {
+export const metadata: Metadata = {
 	title: "Docs — skill-versions",
 	description: "CLI reference, registry format, and CI integration guide for skill-versions.",
 };
@@ -95,7 +97,7 @@ npx skill-versions report --format json`}
 						<h2 id="registry">Registry Format</h2>
 						<p>
 							The <code>skill-versions.json</code> file follows a{" "}
-							<a href="/schema.json">JSON Schema</a> that editors can validate
+							<Link href="/schema.json">JSON Schema</Link> that editors can validate
 							against:
 						</p>
 						<pre>

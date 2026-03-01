@@ -34,3 +34,36 @@
 	display: flex;
 	gap: 16px;
 }
+
+.author {
+	max-width: 1024px;
+	margin: 0 auto;
+	padding: 16px 24px 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	font-size: 13px;
+	border-top: 1px solid var(--border);
+	margin-top: 16px;
+	padding-top: 16px;
+}
+
+.authorText {
+	color: var(--text-tertiary);
+}
+
+.authorLink {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--text-secondary);
+}
+
+.authorLink:hover {
+	color: var(--text-primary);
+}
+
+.avatar {
+	border-radius: 50%;
+}

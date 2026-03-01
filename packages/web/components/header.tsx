@@ -1,16 +1,15 @@
-"use client";
-
+import Link from "next/link";
 import styles from "./header.module.css";
 
 export function Header() {
 	return (
 		<header className={styles.header}>
 			<nav className={styles.nav}>
-				<a href="/" className={styles.logo}>
+				<Link href="/" className={styles.logo}>
 					skill-versions
-				</a>
+				</Link>
 				<div className={styles.links}>
-					<a href="/docs">Docs</a>
+					<Link href="/docs">Docs</Link>
 					<a
 						href="https://github.com/vercel/skill-versions"
 						target="_blank"
