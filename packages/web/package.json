@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"prebuild": "cp ../schema/dist/schema.json public/schema.json",
+		"prebuild": "mkdir -p public && cp ../schema/dist/schema.json public/schema.json",
 		"build": "next build",
 		"dev": "next dev",
 		"lint": "next lint",
