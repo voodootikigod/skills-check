@@ -10,7 +10,7 @@ export function Footer() {
 					<span className={styles.brand}>skill-versions</span>
 					<span className={styles.separator}>|</span>
 					<a
-						href="https://github.com/vercel/skill-versions"
+						href="https://github.com/voodootikigod/skill-versions"
 						target="_blank"
 						rel="noopener noreferrer"
 					>
