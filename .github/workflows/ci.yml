@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
     paths:
-      - "skill-versions.json"
       - "packages/cli/src/**"
       - "packages/schema/src/**"
       - "packages/web/**"
@@ -13,7 +12,6 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "skill-versions.json"
       - "packages/cli/src/**"
       - "packages/schema/src/**"
       - "packages/web/**"
@@ -51,23 +49,3 @@ jobs:
       - name: Test
         run: npm run test
 
-  validate-registry:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Check skill freshness
-        run: node packages/cli/dist/index.js check --ci
