@@ -32,8 +32,8 @@ describe("normalizeVersion", () => {
 	it("coerces non-standard version strings", () => {
 		const result = normalizeVersion("v3-beta");
 		expect(result).not.toBeNull();
-		expect(result!.coerced).toBe(true);
-		expect(result!.version).toBe("3.0.0");
+		expect(result?.coerced).toBe(true);
+		expect(result?.version).toBe("3.0.0");
 	});
 
 	it("returns null for unparseable strings", () => {
@@ -44,7 +44,7 @@ describe("normalizeVersion", () => {
 		// semver.valid handles "v1.2.3" -> null, so it will be coerced
 		const result = normalizeVersion("v1.2.3");
 		expect(result).not.toBeNull();
-		expect(result!.version).toBe("1.2.3");
+		expect(result?.version).toBe("1.2.3");
 	});
 
 	it("prefers strict parsing over coercion", () => {

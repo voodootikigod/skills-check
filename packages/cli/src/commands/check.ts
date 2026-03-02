@@ -135,9 +135,7 @@ export async function checkCommand(options: CheckOptions): Promise<number> {
 
 	if (stale.length > 0) {
 		console.log();
-		console.log(
-			chalk.dim('Run "skill-versions report --format markdown" for a full report.'),
-		);
+		console.log(chalk.dim('Run "skill-versions report --format markdown" for a full report.'));
 	}
 
 	console.log();
