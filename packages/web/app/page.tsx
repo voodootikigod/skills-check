@@ -1,7 +1,7 @@
+import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { Quickstart } from "@/components/quickstart";
-import { Footer } from "@/components/footer";
 
 const jsonLd = {
 	"@context": "https://schema.org",
@@ -31,6 +31,7 @@ export default function Home() {
 		<>
 			<script
 				type="application/ld+json"
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires innerHTML
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 			/>
 			<Header />

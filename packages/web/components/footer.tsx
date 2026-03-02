@@ -20,7 +20,11 @@ export function Footer() {
 					<Link href="/schema.json">Schema</Link>
 				</div>
 				<div className={styles.right}>
-					<a href="https://npmjs.com/package/skill-versions" target="_blank" rel="noopener noreferrer">
+					<a
+						href="https://npmjs.com/package/skill-versions"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						npm
 					</a>
 				</div>

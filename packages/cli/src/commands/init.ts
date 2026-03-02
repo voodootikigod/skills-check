@@ -1,9 +1,9 @@
-import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
+import { createInterface } from "node:readline/promises";
 import chalk from "chalk";
 import { saveRegistry } from "../registry.js";
 import { groupSkills, scanSkills } from "../scanner.js";
-import type { Registry, RegistryProduct, ScannedSkill } from "../types.js";
+import type { Registry, RegistryProduct } from "../types.js";
 
 interface InitOptions {
 	yes?: boolean;
@@ -107,9 +107,7 @@ export async function initCommand(dir: string, options: InitOptions): Promise<nu
 
 			if (!detected) {
 				console.log(
-					chalk.yellow(
-						`  Skipping "${productKey}" (v${version}) — cannot auto-detect npm package`,
-					),
+					chalk.yellow(`  Skipping "${productKey}" (v${version}) — cannot auto-detect npm package`),
 				);
 				continue;
 			}
@@ -182,9 +180,7 @@ export async function initCommand(dir: string, options: InitOptions): Promise<nu
 					continue;
 				}
 
-				const nameAnswer = await rl.question(
-					`    display name [${defaultName}]: `,
-				);
+				const nameAnswer = await rl.question(`    display name [${defaultName}]: `);
 				const displayName = nameAnswer.trim() || defaultName;
 
 				packageToKey.set(packageName, productKey);

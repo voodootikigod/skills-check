@@ -1,7 +1,9 @@
 {
 	"name": "skill-versions-monorepo",
 	"private": true,
-	"workspaces": ["packages/*"],
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
 		"build": "turbo run build",
 		"dev": "turbo run dev",
@@ -15,7 +17,7 @@
 		"typescript": "^5.8.0"
 	},
 	"engines": {
-		"node": ">=18"
+		"node": ">=22"
 	},
 	"packageManager": "npm@10.0.0"
 }

@@ -37,7 +37,8 @@
 }
 
 @keyframes breathe {
-	0%, 100% {
+	0%,
+	100% {
 		text-shadow:
 			0 0 7px rgba(80, 227, 194, 0.7),
 			0 0 20px rgba(80, 227, 194, 0.4),

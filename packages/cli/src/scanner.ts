@@ -1,4 +1,4 @@
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
 import type { ScannedSkill } from "./types.js";
@@ -87,9 +87,7 @@ export async function scanSkills(skillsDir: string): Promise<ScannedSkill[]> {
  *
  * Returns Map<productKey, ScannedSkill[]>
  */
-export function groupSkills(
-	skills: ScannedSkill[],
-): Map<string, ScannedSkill[]> {
+export function groupSkills(skills: ScannedSkill[]): Map<string, ScannedSkill[]> {
 	// Build version lookup: name -> version
 	const versionMap = new Map<string, string>();
 	for (const skill of skills) {

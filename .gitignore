@@ -5,3 +5,4 @@ skill-versions.json
 .turbo/
 .next/
 packages/web/public/schema.json
+packages/web/tsconfig.tsbuildinfo

@@ -2,6 +2,35 @@ import type { NpmDistTags } from "./types.js";
 
 const NPM_REGISTRY = "https://registry.npmjs.org";
 
+export interface NpmPackageMetadata {
+	name: string;
+	repository?: {
+		type: string;
+		url: string;
+		directory?: string;
+	};
+}
+
+/**
+ * Fetch full package metadata from npm (includes repository URL).
+ * Uses the full (non-abbreviated) metadata endpoint.
+ */
+export async function fetchPackageMetadata(packageName: string): Promise<NpmPackageMetadata> {
+	const url = `${NPM_REGISTRY}/${packageName.replace("/", "%2F")}`;
+	const response = await fetch(url, {
+		headers: {
+			Accept: "application/json",
+		},
+	});
+
+	if (!response.ok) {
+		throw new Error(`npm registry returned ${response.status} for "${packageName}"`);
+	}
+
+	const data = (await response.json()) as NpmPackageMetadata;
+	return { name: data.name, repository: data.repository };
+}
+
 /**
  * Fetch the latest version of a package from the npm registry.
  * Uses the abbreviated metadata endpoint for speed.
@@ -48,7 +77,11 @@ export async function fetchLatestVersions(
 				const version = await fetchLatestVersion(name);
 				return { name, version, error: undefined };
 			} catch (error) {
-				return { name, version: undefined, error: error instanceof Error ? error : new Error(String(error)) };
+				return {
+					name,
+					version: undefined,
+					error: error instanceof Error ? error : new Error(String(error)),
+				};
 			}
 		}),
 	);
@@ -58,8 +91,8 @@ export async function fetchLatestVersions(
 			const { name, version, error } = result.value;
 			if (error) {
 				results.set(name, error);
-			} else {
-				results.set(name, version!);
+			} else if (version) {
+				results.set(name, version);
 			}
 		}
 	}

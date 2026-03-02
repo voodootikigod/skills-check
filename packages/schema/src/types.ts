@@ -5,6 +5,7 @@ export interface Registry {
 	$schema?: string;
 	version: number;
 	lastCheck?: string;
+	skillsDir?: string;
 	products: Record<string, RegistryProduct>;
 }
 
@@ -15,4 +16,5 @@ export interface RegistryProduct {
 	verifiedAt: string;
 	changelog?: string;
 	skills: string[];
+	agents?: string[];
 }

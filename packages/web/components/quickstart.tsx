@@ -1,5 +1,5 @@
-import styles from "./quickstart.module.css";
 import { CopyButton } from "./copy-button";
+import styles from "./quickstart.module.css";
 
 const steps = [
 	{
@@ -20,6 +20,12 @@ const steps = [
 		description: "Get a full markdown report for your team or CI pipeline.",
 		command: "npx skill-versions report",
 	},
+	{
+		number: "4",
+		title: "AI-assisted refresh",
+		description: "Use an LLM to propose targeted updates to stale skill files.",
+		command: "npx skill-versions refresh",
+	},
 ];
 
 export function Quickstart() {
@@ -27,7 +33,7 @@ export function Quickstart() {
 		<section className={styles.section}>
 			<div className={styles.container}>
 				<h2 className={styles.heading}>Quickstart</h2>
-				<p className={styles.subtitle}>Three commands to keep your agent skills fresh.</p>
+				<p className={styles.subtitle}>Four commands to keep your agent skills fresh.</p>
 				<div className={styles.steps}>
 					{steps.map((step) => (
 						<div key={step.number} className={styles.step}>

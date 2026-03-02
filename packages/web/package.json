@@ -6,7 +6,7 @@
 		"prebuild": "mkdir -p public && cp ../schema/dist/schema.json public/schema.json",
 		"build": "next build",
 		"dev": "next dev",
-		"lint": "next lint",
+		"lint": "biome check app components",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
