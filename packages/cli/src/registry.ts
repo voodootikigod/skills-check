@@ -75,7 +75,7 @@ function validateRegistry(data: unknown, filePath: string): Registry {
  */
 export async function saveRegistry(registry: Registry, path?: string): Promise<string> {
 	const filePath = path ?? REGISTRY_FILENAME;
-	const content = JSON.stringify(registry, null, 2) + "\n";
+	const content = `${JSON.stringify(registry, null, 2)}\n`;
 	await writeFile(filePath, content, "utf-8");
 	return filePath;
 }

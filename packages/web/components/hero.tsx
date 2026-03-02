@@ -1,5 +1,5 @@
-import styles from "./hero.module.css";
 import { CopyButton } from "./copy-button";
+import styles from "./hero.module.css";
 
 export function Hero() {
 	return (

@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 import { Command } from "commander";
 import { checkCommand } from "./commands/check.js";
 import { initCommand } from "./commands/init.js";
+import { refreshCommand } from "./commands/refresh.js";
 import { reportCommand } from "./commands/report.js";
 
 const require = createRequire(import.meta.url);
@@ -27,9 +28,7 @@ program
 			const code = await checkCommand(options);
 			process.exit(code);
 		} catch (error) {
-			console.error(
-				`Error: ${error instanceof Error ? error.message : String(error)}`,
-			);
+			console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
 			process.exit(2);
 		}
 	});
@@ -45,9 +44,27 @@ program
 			const code = await initCommand(dir, options);
 			process.exit(code);
 		} catch (error) {
-			console.error(
-				`Error: ${error instanceof Error ? error.message : String(error)}`,
-			);
+			console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+			process.exit(2);
+		}
+	});
+
+program
+	.command("refresh")
+	.description("Use an LLM to propose targeted updates to stale skill files")
+	.argument("[skills-dir]", "path to skills directory")
+	.option("-r, --registry <path>", "path to skill-versions.json")
+	.option("-p, --product <name>", "refresh a single product")
+	.option("--provider <name>", "LLM provider: anthropic, openai, google")
+	.option("--model <id>", "specific model ID (e.g. claude-sonnet-4-20250514)")
+	.option("-y, --yes", "auto-apply without confirmation")
+	.option("--dry-run", "show proposed changes, write nothing")
+	.action(async (skillsDir, options) => {
+		try {
+			const code = await refreshCommand(skillsDir, options);
+			process.exit(code);
+		} catch (error) {
+			console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
 			process.exit(2);
 		}
 	});
@@ -62,9 +79,7 @@ program
 			const code = await reportCommand(options);
 			process.exit(code);
 		} catch (error) {
-			console.error(
-				`Error: ${error instanceof Error ? error.message : String(error)}`,
-			);
+			console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
 			process.exit(2);
 		}
 	});

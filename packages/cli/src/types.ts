@@ -34,6 +34,20 @@ export interface NpmDistTags {
 }
 
 /**
+ * Result of refreshing a single skill file via LLM
+ */
+export interface RefreshResult {
+	product: string;
+	skillPath: string;
+	updatedContent: string;
+	summary: string;
+	changes: Array<{ section: string; description: string }>;
+	confidence: "high" | "medium" | "low";
+	breakingChanges: boolean;
+	applied: boolean;
+}
+
+/**
  * Exit codes for CLI
  */
 export const ExitCode = {

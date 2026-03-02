@@ -10,7 +10,9 @@
 		},
 		"./schema.json": "./dist/schema.json"
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "tsup && tsx src/generate.ts",
 		"typecheck": "tsc --noEmit"

@@ -98,6 +98,40 @@ Generate a full staleness report.
 | `-r, --registry <path>` | Path to registry file |
 | `-f, --format <type>` | Output format: `json` or `markdown` (default: `markdown`) |
 
+### `skill-versions refresh [skills-dir]`
+
+Use an LLM to propose targeted updates to stale skill files. Fetches changelogs, generates diffs, and optionally applies changes.
+
+| Flag | Description |
+|------|-------------|
+| `-r, --registry <path>` | Path to registry file |
+| `-p, --product <name>` | Refresh a single product |
+| `--provider <name>` | LLM provider: `anthropic`, `openai`, `google` |
+| `--model <id>` | Specific model ID (e.g. `claude-sonnet-4-20250514`) |
+| `-y, --yes` | Auto-apply without confirmation |
+| `--dry-run` | Show proposed changes, write nothing |
+
+**Provider setup:** Install a provider SDK and set the API key:
+
+```bash
+# Anthropic (Claude)
+npm install @ai-sdk/anthropic
+export ANTHROPIC_API_KEY=sk-...
+
+# OpenAI
+npm install @ai-sdk/openai
+export OPENAI_API_KEY=sk-...
+
+# Google (Gemini)
+npm install @ai-sdk/google
+export GOOGLE_GENERATIVE_AI_API_KEY=...
+```
+
+The skills directory is resolved in priority order:
+1. CLI argument: `skill-versions refresh ./my-skills`
+2. Registry field: `"skillsDir": "./skills"` in skill-versions.json
+3. Default: `./skills`
+
 ## Exit Codes
 
 | Code | Meaning |
@@ -122,7 +156,8 @@ The `skill-versions.json` file maps products to npm packages:
       "verifiedVersion": "6.0.105",
       "verifiedAt": "2026-02-28T00:00:00Z",
       "changelog": "https://github.com/vercel/ai/releases",
-      "skills": ["ai-sdk-core", "ai-sdk-tools", "ai-sdk-react"]
+      "skills": ["ai-sdk-core", "ai-sdk-tools", "ai-sdk-react"],
+      "agents": ["ai-sdk-engineer"]
     }
   }
 }
@@ -144,8 +179,84 @@ The `init` command reads this field and groups skills by shared version + name p
 
 ## CI Integration
 
+### GitHub Action
+
+Add `skill-versions` as a reusable action in your workflow:
+
 ```yaml
-# GitHub Actions
+- uses: voodootikigod/skill-versions@v1
+  with:
+    registry: skill-versions.json  # default
+    open-issues: "true"            # create/update issue on staleness
+    fail-on-stale: "false"         # set "true" to block PRs
+```
+
+The action requires `issues: write` permission when `open-issues` is enabled.
+
+#### Inputs
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `registry` | `skill-versions.json` | Path to registry file |
+| `node-version` | `20` | Node.js version |
+| `open-issues` | `true` | Open/update GitHub issue on staleness |
+| `issue-label` | `skill-staleness` | Label for issue deduplication |
+| `fail-on-stale` | `false` | Exit non-zero when stale |
+| `token` | `${{ github.token }}` | GitHub token (needs `issues: write`) |
+
+#### Outputs
+
+| Output | Description |
+|--------|-------------|
+| `stale-count` | Number of stale products (0 if current) |
+| `issue-number` | Issue number created/updated (empty if none) |
+| `report` | Full markdown report |
+
+#### Weekly cron example
+
+```yaml
+name: Skill Staleness Check
+on:
+  schedule:
+    - cron: "0 9 * * 1"   # Monday 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  staleness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: voodootikigod/skill-versions@v1
+        with:
+          fail-on-stale: "false"
+```
+
+#### PR gate example
+
+```yaml
+- uses: voodootikigod/skill-versions@v1
+  with:
+    open-issues: "false"
+    fail-on-stale: "true"
+```
+
+#### Setup
+
+Create the deduplication label once:
+
+```bash
+gh label create skill-staleness --color "#e4e669" --description "Skill version drift detected"
+```
+
+### Inline check
+
+For simpler setups, use the CLI directly:
+
+```yaml
 - name: Check skill freshness
   run: npx skill-versions check --ci
 ```

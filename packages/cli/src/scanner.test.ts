@@ -13,7 +13,7 @@ describe("groupSkills", () => {
 		const groups = groupSkills(skills);
 		expect(groups.size).toBe(1);
 		expect(groups.has("ai-sdk")).toBe(true);
-		expect(groups.get("ai-sdk")!.length).toBe(3);
+		expect(groups.get("ai-sdk")?.length).toBe(3);
 	});
 
 	it("separates skills with same prefix but different versions", () => {
@@ -30,9 +30,7 @@ describe("groupSkills", () => {
 	});
 
 	it("uses full name for standalone skills", () => {
-		const skills: ScannedSkill[] = [
-			{ name: "mermaid", path: "/a", productVersion: "10.0.0" },
-		];
+		const skills: ScannedSkill[] = [{ name: "mermaid", path: "/a", productVersion: "10.0.0" }];
 
 		const groups = groupSkills(skills);
 		expect(groups.size).toBe(1);
@@ -65,8 +63,8 @@ describe("groupSkills", () => {
 
 		const groups = groupSkills(skills);
 		expect(groups.size).toBe(3);
-		expect(groups.get("ai-sdk")!.length).toBe(2);
-		expect(groups.get("payload")!.length).toBe(2);
-		expect(groups.get("mermaid")!.length).toBe(1);
+		expect(groups.get("ai-sdk")?.length).toBe(2);
+		expect(groups.get("payload")?.length).toBe(2);
+		expect(groups.get("mermaid")?.length).toBe(1);
 	});
 });
