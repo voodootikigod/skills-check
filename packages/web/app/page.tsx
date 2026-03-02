@@ -13,7 +13,7 @@ const jsonLd = {
 		"Freshness checker for AI Agent Skills — like npm outdated for skill knowledge. Scan SKILL.md files, detect stale product-versions, and generate staleness reports.",
 	url: "https://skill-versions.com",
 	downloadUrl: "https://www.npmjs.com/package/skill-versions",
-	softwareVersion: "0.2.3",
+	softwareVersion: "1.0.0",
 	author: {
 		"@type": "Person",
 		name: "Chris Williams",
