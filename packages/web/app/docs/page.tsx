@@ -270,8 +270,8 @@ Your skill content here...`}
 									<td>
 										<code>token</code>
 									</td>
-									{/* biome-ignore lint/suspicious/noTemplateCurlyInString: GitHub Actions expression syntax */}
 									<td>
+										{/* biome-ignore lint/suspicious/noTemplateCurlyInString: GitHub Actions expression syntax */}
 										<code>{"${{ github.token }}"}</code>
 									</td>
 									<td>

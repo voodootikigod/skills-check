@@ -6,10 +6,9 @@ export function Problem() {
 			<div className={styles.container}>
 				<h2 className={styles.heading}>The problem</h2>
 				<p className={styles.lead}>
-					Agent skills are snapshots of knowledge at a point in time.
-					They don&rsquo;t update themselves. They don&rsquo;t know when
-					upstream products ship breaking changes. They just sit there,
-					slowly becoming wrong.
+					Agent skills are snapshots of knowledge at a point in time. They don&rsquo;t update
+					themselves. They don&rsquo;t know when upstream products ship breaking changes. They just
+					sit there, slowly becoming wrong.
 				</p>
 				<div className={styles.points}>
 					<div className={styles.point}>
@@ -17,9 +16,8 @@ export function Problem() {
 						<div>
 							<h3 className={styles.pointTitle}>Silent staleness</h3>
 							<p className={styles.pointDescription}>
-								A renamed package, a deprecated API, a missing parameter
-								&mdash; stale skills don&rsquo;t always fail loudly.
-								Sometimes they just quietly produce worse outcomes.
+								A renamed package, a deprecated API, a missing parameter &mdash; stale skills
+								don&rsquo;t always fail loudly. Sometimes they just quietly produce worse outcomes.
 							</p>
 						</div>
 					</div>
@@ -30,22 +28,18 @@ export function Problem() {
 								Code has dependency management. Skills don&rsquo;t.
 							</h3>
 							<p className={styles.pointDescription}>
-								<code>npm outdated</code> tells you when packages are
-								behind. Dependabot opens PRs. But for agent knowledge?
-								Nothing. Your skill files are flying blind.
+								<code>npm outdated</code> tells you when packages are behind. Dependabot opens PRs.
+								But for agent knowledge? Nothing. Your skill files are flying blind.
 							</p>
 						</div>
 					</div>
 					<div className={styles.point}>
 						<span className={styles.icon}>&#x2705;</span>
 						<div>
-							<h3 className={styles.pointTitle}>
-								skill-versions fixes this
-							</h3>
+							<h3 className={styles.pointTitle}>skill-versions fixes this</h3>
 							<p className={styles.pointDescription}>
-								A product registry, version checker, frontmatter convention,
-								and AI-assisted refresh &mdash; everything you need to keep
-								agent skills current, automatically.
+								A product registry, version checker, frontmatter convention, and AI-assisted refresh
+								&mdash; everything you need to keep agent skills current, automatically.
 							</p>
 						</div>
 					</div>
