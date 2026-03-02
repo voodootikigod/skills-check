@@ -146,7 +146,7 @@ The `skill-versions.json` file maps products to npm packages:
 
 ```json
 {
-  "$schema": "https://skill-versions.dev/schema.json",
+  "$schema": "https://skill-versions.com/schema.json",
   "version": 1,
   "lastCheck": "2026-02-28T00:00:00Z",
   "products": {
@@ -198,7 +198,7 @@ The action requires `issues: write` permission when `open-issues` is enabled.
 | Input | Default | Description |
 |-------|---------|-------------|
 | `registry` | `skill-versions.json` | Path to registry file |
-| `node-version` | `20` | Node.js version |
+| `node-version` | `22` | Node.js version |
 | `open-issues` | `true` | Open/update GitHub issue on staleness |
 | `issue-label` | `skill-staleness` | Label for issue deduplication |
 | `fail-on-stale` | `false` | Exit non-zero when stale |
