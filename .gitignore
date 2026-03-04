@@ -12,6 +12,5 @@ packages/web/tsconfig.tsbuildinfo
 .dolt/
 *.db
 
-# Beads runtime files
-.beads/dolt-monitor.pid
-.beads/dolt-server.activity
+# Beads local state (task tracker runtime)
+.beads/
