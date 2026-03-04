@@ -12,7 +12,7 @@ export function Hero() {
 				Quality & integrity layer for Agent Skills
 				<br />
 				<span className={styles.dim}>
-					Like <code>npm outdated</code> for skill knowledge
+					Freshness, security, quality, and efficiency &mdash; 10 commands, one toolkit
 				</span>
 			</p>
 			<div className={styles.install}>

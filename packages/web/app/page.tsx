@@ -1,3 +1,4 @@
+import { Commands } from "@/components/commands";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
@@ -11,7 +12,7 @@ const jsonLd = {
 	applicationCategory: "DeveloperApplication",
 	operatingSystem: "Any",
 	description:
-		"Quality & integrity layer for AI Agent Skills — like npm outdated for skill knowledge. Scan SKILL.md files, detect stale product-versions, and generate staleness reports.",
+		"Quality & integrity layer for AI Agent Skills — check freshness, audit security, lint metadata, enforce policy, measure token budgets, verify semver, and run eval tests across your SKILL.md files.",
 	url: "https://skillsafe.sh",
 	downloadUrl: "https://www.npmjs.com/package/skillsafe",
 	softwareVersion: "1.0.0",
@@ -39,6 +40,7 @@ export default function Home() {
 			<main>
 				<Hero />
 				<Problem />
+				<Commands />
 				<Quickstart />
 			</main>
 			<Footer />

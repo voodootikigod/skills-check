@@ -18,16 +18,18 @@ export const metadata: Metadata = {
 		template: "%s | Skillsafe",
 	},
 	description:
-		"Keep AI agent skills in sync with the npm packages they describe. Scan SKILL.md files, detect stale product-versions, and generate staleness reports — like npm outdated for skill knowledge.",
+		"Quality & integrity layer for AI Agent Skills — check freshness, audit security, lint metadata, enforce policy, measure token budgets, verify semver, and run eval tests across your SKILL.md files.",
 	metadataBase: new URL("https://skillsafe.sh"),
 	keywords: [
 		"agent skills",
 		"skillsafe",
 		"AI agents",
-		"npm outdated",
-		"freshness checker",
+		"skill audit",
+		"skill lint",
+		"token budget",
 		"SKILL.md",
 		"version check",
+		"policy enforcement",
 		"CLI tool",
 	],
 	authors: [{ name: "Chris Williams", url: "https://github.com/voodootikigod" }],
@@ -35,7 +37,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		title: "Skillsafe — Quality & integrity layer for Agent Skills",
 		description:
-			"Keep AI agent skills in sync with the npm packages they describe. Like npm outdated for skill knowledge.",
+			"Quality & integrity layer for AI Agent Skills. 10 commands for freshness, security, quality, and efficiency.",
 		url: "https://skillsafe.sh",
 		siteName: "Skillsafe",
 		locale: "en_US",
@@ -45,7 +47,7 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: "Skillsafe — Quality & integrity layer for Agent Skills",
 		description:
-			"Keep AI agent skills in sync with the npm packages they describe. Like npm outdated for skill knowledge.",
+			"Quality & integrity layer for AI Agent Skills. 10 commands for freshness, security, quality, and efficiency.",
 		creator: "@voodootikigod",
 	},
 	robots: {

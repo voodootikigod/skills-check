@@ -1,0 +1,106 @@
+.section {
+	border-top: 1px solid var(--border);
+	padding: 64px 0;
+}
+
+.container {
+	max-width: 1024px;
+	margin: 0 auto;
+	padding: 0 24px;
+}
+
+.heading {
+	font-size: 24px;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+.subtitle {
+	color: var(--text-secondary);
+	font-size: 16px;
+	margin-bottom: 40px;
+}
+
+.groups {
+	display: flex;
+	flex-direction: column;
+	gap: 40px;
+}
+
+.group {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.groupLabel {
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--text-tertiary);
+}
+
+.cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 12px;
+}
+
+.card {
+	display: flex;
+	gap: 14px;
+	align-items: flex-start;
+	padding: 16px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--bg-secondary);
+	transition:
+		border-color 0.15s ease,
+		background 0.15s ease;
+}
+
+.card:hover {
+	border-color: var(--border-hover);
+	background: var(--bg-hover);
+}
+
+.cardIcon {
+	flex-shrink: 0;
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	border-radius: 6px;
+	border: 1px solid var(--border);
+	background: var(--bg);
+}
+
+.cardBody {
+	flex: 1;
+	min-width: 0;
+}
+
+.cardName {
+	font-family: var(--font-mono);
+	font-size: 14px;
+	font-weight: 600;
+	margin-bottom: 4px;
+	color: var(--text-primary);
+}
+
+.cardDescription {
+	font-size: 13px;
+	color: var(--text-secondary);
+	line-height: 1.5;
+}
+
+.statusShipped {
+	color: var(--success);
+}
+
+.statusPlanned {
+	color: var(--warning);
+}
