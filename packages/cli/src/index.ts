@@ -4,6 +4,7 @@ import { auditCommand } from "./commands/audit.js";
 import { budgetCommand } from "./commands/budget.js";
 import { checkCommand } from "./commands/check.js";
 import { initCommand } from "./commands/init.js";
+import { lintCommand } from "./commands/lint.js";
 import { refreshCommand } from "./commands/refresh.js";
 import { reportCommand } from "./commands/report.js";
 import { verifyCommand } from "./commands/verify.js";
@@ -117,6 +118,25 @@ program
 	.action(async (dir, options) => {
 		try {
 			const code = await budgetCommand(dir, options);
+			process.exit(code);
+		} catch (error) {
+			console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+			process.exit(2);
+		}
+	});
+
+program
+	.command("lint")
+	.description("Validate metadata completeness and format in skill files")
+	.argument("[dir]", "directory to lint", ".")
+	.option("--fix", "auto-fix missing fields from git context")
+	.option("--ci", "strict CI mode")
+	.option("--fail-on <level>", "exit code 1 threshold: error, warning", "error")
+	.option("-f, --format <type>", "output format: terminal or json", "terminal")
+	.option("-o, --output <path>", "write report to file")
+	.action(async (dir, options) => {
+		try {
+			const code = await lintCommand(dir, options);
 			process.exit(code);
 		} catch (error) {
 			console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
