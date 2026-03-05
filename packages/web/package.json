@@ -1,6 +1,6 @@
 {
   "name": "@skills-check/web",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "prebuild": "mkdir -p public && cp ../schema/dist/schema.json public/schema.json",
