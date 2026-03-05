@@ -52,9 +52,12 @@
 	gap: 14px;
 	align-items: flex-start;
 	padding: 16px;
+	color: inherit;
+	text-decoration: none;
 	background: var(--bg-secondary);
 	border: 1px solid var(--border);
 	border-radius: 8px;
+	cursor: pointer;
 	transition:
 		border-color 0.15s ease,
 		background 0.15s ease;
