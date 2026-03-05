@@ -1,3 +1,4 @@
+import { isSafeRegex } from "../../shared/safe-regex.js";
 import type { SkillFile } from "../../skill-io.js";
 import type { PolicyFinding, SkillPolicy } from "../types.js";
 
@@ -30,6 +31,9 @@ export function checkContent(file: SkillFile, policy: SkillPolicy): PolicyFindin
 		for (const dp of policy.content.deny_patterns) {
 			let regex: RegExp;
 			try {
+				if (!isSafeRegex(dp.pattern)) {
+					continue; // Skip unsafe regex (caught by validation)
+				}
 				regex = new RegExp(dp.pattern, "m");
 			} catch {
 				continue; // Skip invalid regex (should be caught by validation)
@@ -55,6 +59,9 @@ export function checkContent(file: SkillFile, policy: SkillPolicy): PolicyFindin
 		for (const rp of policy.content.require_patterns) {
 			let regex: RegExp;
 			try {
+				if (!isSafeRegex(rp.pattern)) {
+					continue; // Skip unsafe regex (caught by validation)
+				}
 				regex = new RegExp(rp.pattern, "m");
 			} catch {
 				continue;

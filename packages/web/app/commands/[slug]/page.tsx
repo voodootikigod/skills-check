@@ -1,0 +1,123 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
+import { commandSlugs, getCommandBySlug } from "@/lib/commands";
+import styles from "./command.module.css";
+
+interface Props {
+	params: Promise<{ slug: string }>;
+}
+
+export async function generateStaticParams() {
+	return commandSlugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+	const { slug } = await params;
+	const cmd = getCommandBySlug(slug);
+	if (!cmd) return {};
+
+	return {
+		title: `${cmd.name} command`,
+		description: cmd.description,
+		alternates: {
+			canonical: `https://skillscheck.ai/commands/${slug}`,
+		},
+	};
+}
+
+export default async function CommandPage({ params }: Props) {
+	const { slug } = await params;
+	const cmd = getCommandBySlug(slug);
+	if (!cmd) notFound();
+
+	return (
+		<>
+			<Header />
+			<main className={styles.main}>
+				<article className={styles.article}>
+					<Link className={styles.backLink} href="/#commands">
+						&larr; All commands
+					</Link>
+
+					<div className={styles.header}>
+						<span className={styles.icon}>{cmd.icon}</span>
+						<div>
+							<span className={styles.group}>{cmd.group}</span>
+							<h1 className={styles.title}>{cmd.name}</h1>
+						</div>
+					</div>
+
+					<p className={styles.tagline}>{cmd.description}</p>
+
+					<section>
+						<h2>Why it matters</h2>
+						<p>{cmd.whyItMatters}</p>
+					</section>
+
+					<section>
+						<h2>What it does</h2>
+						<ul className={styles.list}>
+							{cmd.whatItDoes.map((item) => (
+								<li key={item}>{item}</li>
+							))}
+						</ul>
+					</section>
+
+					<section>
+						<h2>Usage</h2>
+						<pre>
+							<code>{cmd.usage}</code>
+						</pre>
+
+						<h3>Options</h3>
+						<table>
+							<thead>
+								<tr>
+									<th>Flag</th>
+									<th>Description</th>
+								</tr>
+							</thead>
+							<tbody>
+								{cmd.options.map((opt) => (
+									<tr key={opt.flag}>
+										<td>
+											<code>{opt.flag}</code>
+										</td>
+										<td>{opt.description}</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</section>
+
+					<section>
+						<h2>Examples</h2>
+						{cmd.examples.map((ex) => (
+							<div key={ex.label}>
+								<h3>{ex.label}</h3>
+								<pre>
+									<code>{ex.code}</code>
+								</pre>
+							</div>
+						))}
+					</section>
+
+					{cmd.ciTip && (
+						<section className={styles.ciTip}>
+							<h2>CI tip</h2>
+							<p>{cmd.ciTip}</p>
+						</section>
+					)}
+
+					<div className={styles.navLinks}>
+						<Link href="/docs#commands">Full CLI reference &rarr;</Link>
+					</div>
+				</article>
+			</main>
+			<Footer />
+		</>
+	);
+}

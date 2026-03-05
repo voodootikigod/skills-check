@@ -1,5 +1,7 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { resolve } from "node:path";
+import { isSafeRegex } from "../../shared/safe-regex.js";
+import { safePath } from "../safe-path.js";
 import type { GraderResult } from "../types.js";
 
 /**
@@ -12,7 +14,7 @@ export async function gradeContains(
 	patterns: string[],
 	negate?: boolean
 ): Promise<GraderResult> {
-	const fullPath = join(workDir, file);
+	const fullPath = safePath(resolve(workDir), file);
 	let content: string;
 
 	try {
@@ -29,6 +31,10 @@ export async function gradeContains(
 
 	for (const pattern of patterns) {
 		try {
+			if (!isSafeRegex(pattern)) {
+				failedPatterns.push(`${pattern} (unsafe regex, skipped)`);
+				continue;
+			}
 			const regex = new RegExp(pattern);
 			const matches = regex.test(content);
 

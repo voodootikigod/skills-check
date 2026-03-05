@@ -1,14 +1,21 @@
 import { readFile, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { isSafeRegex } from "../shared/safe-regex.js";
 import type { SkillPolicy } from "./types.js";
 
 /**
  * Dynamically import js-yaml (transitive dep via gray-matter).
  * Uses dynamic import to avoid adding a direct dependency.
  */
-async function loadYaml(): Promise<{ load: (str: string) => unknown }> {
+async function loadYaml(): Promise<{
+	load: (str: string, opts?: { schema: unknown }) => unknown;
+	JSON_SCHEMA: unknown;
+}> {
 	const mod = await import("js-yaml");
-	return (mod.default ?? mod) as { load: (str: string) => unknown };
+	return (mod.default ?? mod) as {
+		load: (str: string, opts?: { schema: unknown }) => unknown;
+		JSON_SCHEMA: unknown;
+	};
 }
 
 /**
@@ -17,7 +24,7 @@ async function loadYaml(): Promise<{ load: (str: string) => unknown }> {
  */
 export async function parsePolicy(content: string): Promise<SkillPolicy> {
 	const yaml = await loadYaml();
-	const raw = yaml.load(content);
+	const raw = yaml.load(content, { schema: yaml.JSON_SCHEMA });
 
 	if (raw === null || raw === undefined || typeof raw !== "object") {
 		throw new Error("Policy file is empty or not a valid YAML object");
@@ -103,6 +110,11 @@ export function validatePolicy(policy: SkillPolicy): string[] {
 				for (const dp of policy.content.deny_patterns) {
 					try {
 						new RegExp(dp.pattern);
+						if (!isSafeRegex(dp.pattern)) {
+							errors.push(
+								`content.deny_patterns: potentially unsafe regex "${dp.pattern}" (may cause catastrophic backtracking)`
+							);
+						}
 					} catch {
 						errors.push(`content.deny_patterns: invalid regex "${dp.pattern}"`);
 					}
@@ -121,6 +133,11 @@ export function validatePolicy(policy: SkillPolicy): string[] {
 				for (const rp of policy.content.require_patterns) {
 					try {
 						new RegExp(rp.pattern);
+						if (!isSafeRegex(rp.pattern)) {
+							errors.push(
+								`content.require_patterns: potentially unsafe regex "${rp.pattern}" (may cause catastrophic backtracking)`
+							);
+						}
 					} catch {
 						errors.push(`content.require_patterns: invalid regex "${rp.pattern}"`);
 					}
