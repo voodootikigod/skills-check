@@ -61,7 +61,7 @@ export async function auditCommand(dir: string, options: AuditCommandOptions): P
 	// If isolation is requested and not "local", delegate to the isolation provider
 	if (isolationChoice && isolationChoice !== "local") {
 		const { selectProvider } = await import("../isolation/detect.js");
-		const provider = await selectProvider(isolationChoice, options.verbose);
+		const provider = await selectProvider(isolationChoice as IsolationChoice, options.verbose);
 
 		// Warn when no isolation runtime was found and we're falling back to local
 		if (provider.isFallback && !options.quiet) {

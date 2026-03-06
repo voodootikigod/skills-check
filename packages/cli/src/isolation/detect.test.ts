@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { IsolationExecuteOptions, IsolationResult } from "./types.js";
+
 interface MockProvider {
 	available: () => Promise<boolean>;
-	execute: () => void;
+	execute: (options: IsolationExecuteOptions) => Promise<IsolationResult>;
 	isFallback: boolean;
 	name: string;
 }

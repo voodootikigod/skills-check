@@ -97,7 +97,8 @@ function hasNestedQuantifiers(pattern: string): boolean {
 				}
 				// Mark the parent group as having a quantifier
 				if (groupStack.length > 0) {
-					groupStack.at(-1).hasQuantifier = true;
+					// biome-ignore lint/style/useAtIndex: .at() returns possibly undefined, bracket access is guarded by length check
+					groupStack[groupStack.length - 1].hasQuantifier = true;
 				}
 			}
 			continue;
@@ -106,7 +107,8 @@ function hasNestedQuantifiers(pattern: string): boolean {
 		// Check for quantifiers on atoms
 		if (isQuantifier(pattern, i)) {
 			if (groupStack.length > 0) {
-				groupStack.at(-1).hasQuantifier = true;
+				// biome-ignore lint/style/useAtIndex: .at() returns possibly undefined, bracket access is guarded by length check
+				groupStack[groupStack.length - 1].hasQuantifier = true;
 			}
 			// Skip past the quantifier (and optional ? or + modifiers)
 			i++;
