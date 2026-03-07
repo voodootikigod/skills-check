@@ -3,6 +3,7 @@ import { formatAndOutput } from "../shared/index.js";
 import { runVerify } from "../verify/index.js";
 import { formatVerifyJson } from "../verify/reporters/json.js";
 import { formatVerifyMarkdown } from "../verify/reporters/markdown.js";
+import { formatVerifySarif } from "../verify/reporters/sarif.js";
 import { formatVerifyTerminal } from "../verify/reporters/terminal.js";
 import type { VerifyOptions } from "../verify/types.js";
 
@@ -10,7 +11,7 @@ interface VerifyCommandOptions {
 	after?: string;
 	all?: boolean;
 	before?: string;
-	format?: "terminal" | "json" | "markdown";
+	format?: "terminal" | "json" | "markdown" | "sarif";
 	model?: string;
 	output?: string;
 	provider?: string;
@@ -86,6 +87,7 @@ export async function verifyCommand(options: VerifyCommandOptions): Promise<numb
 			terminal: formatVerifyTerminal,
 			json: formatVerifyJson,
 			markdown: formatVerifyMarkdown,
+			sarif: formatVerifySarif,
 		}
 	);
 

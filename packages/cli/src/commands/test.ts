@@ -4,6 +4,7 @@ import type { IsolationChoice } from "../isolation/types.js";
 import { runTests } from "../testing/index.js";
 import { formatJson } from "../testing/reporters/json.js";
 import { formatMarkdown } from "../testing/reporters/markdown.js";
+import { formatTestSarif } from "../testing/reporters/sarif.js";
 import { formatTerminal } from "../testing/reporters/terminal.js";
 import type { TestOptions } from "../testing/types.js";
 
@@ -12,7 +13,7 @@ interface TestCommandOptions {
 	agentCmd?: string;
 	ci?: boolean;
 	dry?: boolean;
-	format?: "terminal" | "json" | "markdown";
+	format?: "terminal" | "json" | "markdown" | "sarif";
 	isolation?: IsolationChoice | boolean;
 	maxCost?: string;
 	model?: string;
@@ -239,6 +240,9 @@ export async function testCommand(dir: string, options: TestCommandOptions): Pro
 			break;
 		case "markdown":
 			output = formatMarkdown(reports, baselineDiffs);
+			break;
+		case "sarif":
+			output = formatTestSarif(reports);
 			break;
 		default:
 			output = formatTerminal(reports, {

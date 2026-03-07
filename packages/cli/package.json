@@ -6,6 +6,13 @@
   "bin": {
     "skills-check": "./dist/index.js"
   },
+  "exports": {
+    ".": "./dist/index.js",
+    "./api": {
+      "types": "./dist/api.d.ts",
+      "import": "./dist/api.js"
+    }
+  },
   "files": [
     "dist"
   ],

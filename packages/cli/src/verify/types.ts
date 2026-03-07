@@ -30,7 +30,7 @@ export interface VerifyOptions {
 	after?: string;
 	all?: boolean;
 	before?: string;
-	format?: "terminal" | "json" | "markdown";
+	format?: "terminal" | "json" | "markdown" | "sarif";
 	model?: string;
 	output?: string;
 	provider?: string;

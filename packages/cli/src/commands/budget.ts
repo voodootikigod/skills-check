@@ -5,13 +5,14 @@ import { getAvailableModels } from "../budget/cost.js";
 import { runBudget } from "../budget/index.js";
 import { formatComparisonJson, formatJson } from "../budget/reporters/json.js";
 import { formatComparisonMarkdown, formatMarkdown } from "../budget/reporters/markdown.js";
+import { formatBudgetSarif } from "../budget/reporters/sarif.js";
 import { formatComparisonTerminal, formatTerminal } from "../budget/reporters/terminal.js";
 import type { BudgetOptions } from "../budget/types.js";
 
 interface BudgetCommandOptions {
 	compare?: string;
 	detailed?: boolean;
-	format?: "terminal" | "json" | "markdown";
+	format?: "terminal" | "json" | "markdown" | "sarif";
 	maxTokens?: string;
 	model?: string;
 	output?: string;
@@ -86,6 +87,9 @@ export async function budgetCommand(dir: string, options: BudgetCommandOptions):
 				break;
 			case "markdown":
 				output = formatMarkdown(report, options.detailed);
+				break;
+			case "sarif":
+				output = formatBudgetSarif(report);
 				break;
 			default:
 				output = formatTerminal(report, options.detailed);

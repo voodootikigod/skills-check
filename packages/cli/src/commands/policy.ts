@@ -5,6 +5,7 @@ import { generateStarterPolicy } from "../policy/init.js";
 import { discoverPolicyFile, loadPolicyFile, validatePolicy } from "../policy/parser.js";
 import { formatPolicyJson } from "../policy/reporters/json.js";
 import { formatPolicyMarkdown } from "../policy/reporters/markdown.js";
+import { formatPolicySarif } from "../policy/reporters/sarif.js";
 import { formatPolicyTerminal } from "../policy/reporters/terminal.js";
 import type { PolicyOptions, PolicySeverity, SkillPolicy } from "../policy/types.js";
 import { formatAndOutput, policyThreshold } from "../shared/index.js";
@@ -12,7 +13,7 @@ import { formatAndOutput, policyThreshold } from "../shared/index.js";
 interface PolicyCheckCommandOptions {
 	ci?: boolean;
 	failOn?: string;
-	format?: "terminal" | "json" | "markdown";
+	format?: "terminal" | "json" | "markdown" | "sarif";
 	output?: string;
 	policy?: string;
 	quiet?: boolean;
@@ -96,6 +97,7 @@ export async function policyCheckCommand(
 			terminal: formatPolicyTerminal,
 			json: formatPolicyJson,
 			markdown: formatPolicyMarkdown,
+			sarif: formatPolicySarif,
 		}
 	);
 

@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { runLint } from "../lint/index.js";
 import { formatLintJson } from "../lint/reporters/json.js";
 import { formatLintMarkdown } from "../lint/reporters/markdown.js";
+import { formatLintSarif } from "../lint/reporters/sarif.js";
 import { formatLintTerminal } from "../lint/reporters/terminal.js";
 import type { LintOptions } from "../lint/types.js";
 import { formatAndOutput, lintThreshold } from "../shared/index.js";
@@ -10,7 +11,7 @@ interface LintCommandOptions {
 	ci?: boolean;
 	failOn?: string;
 	fix?: boolean;
-	format?: "terminal" | "json" | "markdown";
+	format?: "terminal" | "json" | "markdown" | "sarif";
 	output?: string;
 	quiet?: boolean;
 	verbose?: boolean;
@@ -50,6 +51,7 @@ export async function lintCommand(dir: string, options: LintCommandOptions): Pro
 			terminal: formatLintTerminal,
 			json: formatLintJson,
 			markdown: formatLintMarkdown,
+			sarif: formatLintSarif,
 		}
 	);
 

@@ -90,6 +90,25 @@ outputs:
   results:
     description: "JSON object with exit codes from each command that was run"
     value: ${{ steps.summary.outputs.results }}
+  # ── Per-command structured outputs ────────────────────────────────
+  audit-findings:
+    description: "Total number of audit findings"
+    value: ${{ steps.audit.outputs.finding_count }}
+  lint-findings:
+    description: "Total number of lint findings"
+    value: ${{ steps.lint.outputs.finding_count }}
+  budget-total-tokens:
+    description: "Total token count across all skills"
+    value: ${{ steps.budget.outputs.total_tokens }}
+  policy-findings:
+    description: "Total number of policy findings"
+    value: ${{ steps.policy.outputs.finding_count }}
+  verify-failed:
+    description: "Number of verify mismatches"
+    value: ${{ steps.verify.outputs.failed_count }}
+  test-failed:
+    description: "Number of failed test cases"
+    value: ${{ steps.test.outputs.failed_count }}
 
 runs:
   using: "composite"
@@ -205,14 +224,17 @@ runs:
         INPUT_AUDIT_FAIL_ON: ${{ inputs.audit-fail-on }}
       run: |
         set +e
-        npx --yes skills-check audit "$INPUT_SKILLS_DIR" \
+        AUDIT_OUTPUT=$(npx --yes skills-check audit "$INPUT_SKILLS_DIR" \
           --format json \
-          --fail-on "$INPUT_AUDIT_FAIL_ON" \
-          --quiet
+          --fail-on "$INPUT_AUDIT_FAIL_ON" 2>&1)
         EXIT_CODE=$?
         set -e
 
         echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+        # Extract finding count from JSON output
+        FINDING_COUNT=$(echo "$AUDIT_OUTPUT" | jq '.summary.total // 0' 2>/dev/null || echo "0")
+        echo "finding_count=${FINDING_COUNT}" >> "$GITHUB_OUTPUT"
 
         if [ "$EXIT_CODE" -eq 2 ]; then
           echo "::error::skills-check audit: configuration error"
@@ -233,14 +255,18 @@ runs:
         INPUT_LINT_FAIL_ON: ${{ inputs.lint-fail-on }}
       run: |
         set +e
-        npx --yes skills-check lint "$INPUT_SKILLS_DIR" \
+        LINT_OUTPUT=$(npx --yes skills-check lint "$INPUT_SKILLS_DIR" \
           --ci \
           --format json \
-          --fail-on "$INPUT_LINT_FAIL_ON"
+          --fail-on "$INPUT_LINT_FAIL_ON" 2>&1)
         EXIT_CODE=$?
         set -e
 
         echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+        # Extract finding count from JSON output
+        FINDING_COUNT=$(echo "$LINT_OUTPUT" | jq '.findings | length // 0' 2>/dev/null || echo "0")
+        echo "finding_count=${FINDING_COUNT}" >> "$GITHUB_OUTPUT"
 
         if [ "$EXIT_CODE" -eq 2 ]; then
           echo "::error::skills-check lint: configuration error"
@@ -266,11 +292,15 @@ runs:
         fi
 
         set +e
-        npx --yes skills-check budget "${BUDGET_ARGS[@]}"
+        BUDGET_OUTPUT=$(npx --yes skills-check budget "${BUDGET_ARGS[@]}" 2>&1)
         EXIT_CODE=$?
         set -e
 
         echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+        # Extract total tokens from JSON output
+        TOTAL_TOKENS=$(echo "$BUDGET_OUTPUT" | jq '.totalTokens // 0' 2>/dev/null || echo "0")
+        echo "total_tokens=${TOTAL_TOKENS}" >> "$GITHUB_OUTPUT"
 
         if [ "$EXIT_CODE" -eq 2 ]; then
           echo "::error::skills-check budget: configuration error"
@@ -298,11 +328,15 @@ runs:
         POLICY_ARGS+=(--fail-on "$INPUT_POLICY_FAIL_ON")
 
         set +e
-        npx --yes skills-check policy check "${POLICY_ARGS[@]}"
+        POLICY_OUTPUT=$(npx --yes skills-check policy check "${POLICY_ARGS[@]}" 2>&1)
         EXIT_CODE=$?
         set -e
 
         echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+        # Extract finding count from JSON output
+        FINDING_COUNT=$(echo "$POLICY_OUTPUT" | jq '.findings | length // 0' 2>/dev/null || echo "0")
+        echo "finding_count=${FINDING_COUNT}" >> "$GITHUB_OUTPUT"
 
         if [ "$EXIT_CODE" -eq 2 ]; then
           echo "::error::skills-check policy: configuration error"
@@ -320,11 +354,15 @@ runs:
       shell: bash
       run: |
         set +e
-        npx --yes skills-check verify --all --format json --skip-llm --quiet
+        VERIFY_OUTPUT=$(npx --yes skills-check verify --all --format json --skip-llm 2>&1)
         EXIT_CODE=$?
         set -e
 
         echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+        # Extract failed count from JSON output
+        FAILED_COUNT=$(echo "$VERIFY_OUTPUT" | jq '.summary.failed // 0' 2>/dev/null || echo "0")
+        echo "failed_count=${FAILED_COUNT}" >> "$GITHUB_OUTPUT"
 
         if [ "$EXIT_CODE" -eq 2 ]; then
           echo "::error::skills-check verify: configuration error"
@@ -344,11 +382,15 @@ runs:
         INPUT_SKILLS_DIR: ${{ inputs.skills-dir }}
       run: |
         set +e
-        npx --yes skills-check test "$INPUT_SKILLS_DIR" --ci --format json
+        TEST_OUTPUT=$(npx --yes skills-check test "$INPUT_SKILLS_DIR" --ci --format json 2>&1)
         EXIT_CODE=$?
         set -e
 
         echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+
+        # Extract failed count from JSON output (sum of failed across all suites)
+        FAILED_COUNT=$(echo "$TEST_OUTPUT" | jq '[.[].failed] | add // 0' 2>/dev/null || echo "0")
+        echo "failed_count=${FAILED_COUNT}" >> "$GITHUB_OUTPUT"
 
         if [ "$EXIT_CODE" -eq 2 ]; then
           echo "::error::skills-check test: configuration error"

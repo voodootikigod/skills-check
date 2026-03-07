@@ -89,7 +89,7 @@ export interface BudgetOptions {
 	/** Show per-section breakdown. */
 	detailed?: boolean;
 	/** Output format. */
-	format?: "terminal" | "json" | "markdown";
+	format?: "terminal" | "json" | "markdown" | "sarif";
 	/** Maximum tokens threshold for CI. */
 	maxTokens?: number;
 	/** Model for cost estimation. */

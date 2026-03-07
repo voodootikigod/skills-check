@@ -75,7 +75,7 @@ export interface TestOptions {
 	agentCmd?: string;
 	ci?: boolean;
 	dry?: boolean;
-	format?: "terminal" | "json" | "markdown";
+	format?: "terminal" | "json" | "markdown" | "sarif";
 	maxCost?: number;
 	model?: string;
 	output?: string;
