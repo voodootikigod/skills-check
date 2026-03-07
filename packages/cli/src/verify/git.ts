@@ -3,6 +3,7 @@ import { relative } from "node:path";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
+const GIT_TIMEOUT_MS = 30_000;
 
 /**
  * Get the git repository root directory for the given path.
@@ -10,7 +11,10 @@ const execFileAsync = promisify(execFile);
  */
 async function getRepoRoot(cwd: string): Promise<string | null> {
 	try {
-		const { stdout } = await execFileAsync("git", ["rev-parse", "--show-toplevel"], { cwd });
+		const { stdout } = await execFileAsync("git", ["rev-parse", "--show-toplevel"], {
+			cwd,
+			timeout: GIT_TIMEOUT_MS,
+		});
 		return stdout.trim();
 	} catch {
 		return null;
@@ -41,7 +45,7 @@ export async function getPreviousVersion(filePath: string): Promise<string | nul
 		const { stdout: commitHash } = await execFileAsync(
 			"git",
 			["log", "--follow", "-1", "--skip=1", "--format=%H", "--", relativePath],
-			{ cwd: repoRoot }
+			{ cwd: repoRoot, timeout: GIT_TIMEOUT_MS }
 		);
 
 		const hash = commitHash.trim();
@@ -50,6 +54,7 @@ export async function getPreviousVersion(filePath: string): Promise<string | nul
 			try {
 				const { stdout: content } = await execFileAsync("git", ["show", `HEAD~1:${relativePath}`], {
 					cwd: repoRoot,
+					timeout: GIT_TIMEOUT_MS,
 				});
 				return content;
 			} catch {
@@ -59,6 +64,7 @@ export async function getPreviousVersion(filePath: string): Promise<string | nul
 
 		const { stdout: content } = await execFileAsync("git", ["show", `${hash}:${relativePath}`], {
 			cwd: repoRoot,
+			timeout: GIT_TIMEOUT_MS,
 		});
 		return content;
 	} catch {

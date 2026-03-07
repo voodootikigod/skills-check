@@ -19,6 +19,7 @@ interface TestCommandOptions {
 	output?: string;
 	passThreshold?: string;
 	provider?: string;
+	quiet?: boolean;
 	skill?: string;
 	timeout?: string;
 	trials?: string;
@@ -29,6 +30,11 @@ interface TestCommandOptions {
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: orchestrator function
 export async function testCommand(dir: string, options: TestCommandOptions): Promise<number> {
+	if (options.verbose && options.quiet) {
+		console.error(chalk.red("Cannot use --verbose and --quiet together."));
+		return 2;
+	}
+
 	const testOptions: TestOptions = {
 		skill: options.skill,
 		type: options.type,
@@ -245,8 +251,10 @@ export async function testCommand(dir: string, options: TestCommandOptions): Pro
 	// Write to file or stdout
 	if (options.output) {
 		await writeFile(options.output, output, "utf-8");
-		console.error(chalk.green(`Report written to ${options.output}`));
-	} else {
+		if (!options.quiet) {
+			console.error(chalk.green(`Report written to ${options.output}`));
+		}
+	} else if (!options.quiet) {
 		console.log(output);
 	}
 

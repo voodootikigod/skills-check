@@ -12,9 +12,16 @@ interface LintCommandOptions {
 	fix?: boolean;
 	format?: "terminal" | "json" | "markdown";
 	output?: string;
+	quiet?: boolean;
+	verbose?: boolean;
 }
 
 export async function lintCommand(dir: string, options: LintCommandOptions): Promise<number> {
+	if (options.verbose && options.quiet) {
+		console.error(chalk.red("Cannot use --verbose and --quiet together."));
+		return 2;
+	}
+
 	const failOn = options.failOn ?? "error";
 	if (!lintThreshold.validValues.has(failOn as "error" | "warning")) {
 		console.error(
@@ -38,7 +45,7 @@ export async function lintCommand(dir: string, options: LintCommandOptions): Pro
 	// Format and write output
 	await formatAndOutput(
 		report,
-		{ format: options.format, output: options.output },
+		{ format: options.format, output: options.output, quiet: options.quiet },
 		{
 			terminal: formatLintTerminal,
 			json: formatLintJson,

@@ -8,6 +8,7 @@ interface CheckOptions {
 	ci?: boolean;
 	json?: boolean;
 	product?: string;
+	quiet?: boolean;
 	registry?: string;
 	verbose?: boolean;
 }
@@ -27,6 +28,11 @@ function getSeverityColor(severity: string) {
  */
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: orchestrator function
 export async function checkCommand(options: CheckOptions): Promise<number> {
+	if (options.verbose && options.quiet) {
+		console.error(chalk.red("Cannot use --verbose and --quiet together."));
+		return 2;
+	}
+
 	const registry = await loadRegistry(options.registry);
 
 	// Filter to single product if requested
@@ -96,7 +102,9 @@ export async function checkCommand(options: CheckOptions): Promise<number> {
 
 	// JSON output
 	if (options.json) {
-		console.log(JSON.stringify(results, null, 2));
+		if (!options.quiet) {
+			console.log(JSON.stringify(results, null, 2));
+		}
 		const hasStale = results.some((r) => r.stale);
 		return options.ci && hasStale ? 1 : 0;
 	}
@@ -104,6 +112,13 @@ export async function checkCommand(options: CheckOptions): Promise<number> {
 	// Human-readable output
 	const stale = results.filter((r) => r.stale);
 	const current = results.filter((r) => !r.stale);
+
+	if (options.quiet) {
+		if (options.ci && stale.length > 0) {
+			return 1;
+		}
+		return 0;
+	}
 
 	console.log();
 	console.log(chalk.bold("skills-check"));

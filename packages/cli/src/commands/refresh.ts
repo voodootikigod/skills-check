@@ -311,10 +311,18 @@ function promptUser(question: string): Promise<string> {
 		output: process.stdout,
 	});
 
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 		rl.question(question, (answer) => {
 			rl.close();
 			resolve(answer.trim().toLowerCase() || "n");
+		});
+		rl.on("error", (err) => {
+			rl.close();
+			reject(err);
+		});
+		rl.on("close", () => {
+			// If closed without an answer (e.g. stdin EOF), resolve with default
+			resolve("n");
 		});
 	});
 }

@@ -30,6 +30,7 @@ program
 	.option("-p, --product <name>", "check a single product")
 	.option("--json", "output results as JSON")
 	.option("-v, --verbose", "show all products including current")
+	.option("--quiet", "suppress output, exit code only")
 	.option("--ci", "exit code 1 if any stale products found")
 	.action(async (options) => {
 		try {
@@ -124,6 +125,8 @@ program
 		"--model <name>",
 		"model for cost estimation: claude-opus, claude-sonnet, claude-haiku, gpt-4o"
 	)
+	.option("--verbose", "show progress and details")
+	.option("--quiet", "suppress output, exit code only")
 	.action(async (dir, options) => {
 		try {
 			const code = await budgetCommand(dir, options);
@@ -143,6 +146,8 @@ program
 	.option("--fail-on <level>", "exit code 1 threshold: error, warning", "error")
 	.option("-f, --format <type>", "output format: terminal, json, or markdown", "terminal")
 	.option("-o, --output <path>", "write report to file")
+	.option("--verbose", "show progress and details")
+	.option("--quiet", "suppress output, exit code only")
 	.action(async (dir, options) => {
 		try {
 			const code = await lintCommand(dir, options);
@@ -207,6 +212,8 @@ policyCmd
 	.option("-f, --format <type>", "output format: terminal, json, or markdown", "terminal")
 	.option("-o, --output <path>", "write report to file")
 	.option("--fail-on <severity>", "exit code 1 threshold: blocked, violation, warning", "blocked")
+	.option("--verbose", "show progress and details")
+	.option("--quiet", "suppress output, exit code only")
 	.action(async (dir, options) => {
 		try {
 			const code = await policyCheckCommand(dir, options);
@@ -265,6 +272,7 @@ program
 	.option("--provider <name>", "LLM provider for rubric grading: anthropic, openai, google")
 	.option("--model <id>", "model for rubric grading")
 	.option("--verbose", "show per-grader results")
+	.option("--quiet", "suppress output, exit code only")
 	.option(
 		"--isolation <provider>",
 		"run in isolated environment: auto, oci, apple, docker, podman, orbstack, rancher, nerdctl, vercel, local"

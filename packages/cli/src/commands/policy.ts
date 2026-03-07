@@ -15,7 +15,9 @@ interface PolicyCheckCommandOptions {
 	format?: "terminal" | "json" | "markdown";
 	output?: string;
 	policy?: string;
+	quiet?: boolean;
 	skill?: string;
+	verbose?: boolean;
 }
 
 /**
@@ -25,6 +27,11 @@ export async function policyCheckCommand(
 	dir: string,
 	options: PolicyCheckCommandOptions
 ): Promise<number> {
+	if (options.verbose && options.quiet) {
+		console.error(chalk.red("Cannot use --verbose and --quiet together."));
+		return 2;
+	}
+
 	const failOn = (options.failOn ?? "blocked") as PolicySeverity;
 	if (!policyThreshold.validValues.has(failOn)) {
 		console.error(
@@ -84,7 +91,7 @@ export async function policyCheckCommand(
 	// Format and write output
 	await formatAndOutput(
 		report,
-		{ format: options.format, output: options.output },
+		{ format: options.format, output: options.output, quiet: options.quiet },
 		{
 			terminal: formatPolicyTerminal,
 			json: formatPolicyJson,
