@@ -13,9 +13,24 @@ export const metadata: Metadata = {
 	},
 };
 
+const techArticleJsonLd = {
+	"@context": "https://schema.org",
+	"@type": "TechArticle",
+	headline: "Skills Check Documentation",
+	description:
+		"Complete CLI reference for skills-check: init, check, report, refresh, audit, lint, budget, verify, policy, and test commands. Registry format, SKILL.md frontmatter spec, and CI integration guide.",
+	url: "https://skillscheck.ai/docs",
+	author: { "@type": "Person", name: "Chris Williams" },
+};
+
 export default function DocsPage() {
 	return (
 		<>
+			<script
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires innerHTML
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(techArticleJsonLd) }}
+				type="application/ld+json"
+			/>
 			<Header />
 			<main className={styles.main}>
 				<article className={styles.article}>

@@ -38,8 +38,52 @@ export default async function CommandPage({ params }: Props) {
 		notFound();
 	}
 
+	const techArticleJsonLd = {
+		"@context": "https://schema.org",
+		"@type": "TechArticle",
+		headline: `skills-check ${cmd.name} command`,
+		description: cmd.description,
+		url: `https://skillscheck.ai/commands/${slug}`,
+		author: { "@type": "Person", name: "Chris Williams" },
+	};
+
+	const breadcrumbJsonLd = {
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		itemListElement: [
+			{
+				"@type": "ListItem",
+				position: 1,
+				name: "Home",
+				item: "https://skillscheck.ai",
+			},
+			{
+				"@type": "ListItem",
+				position: 2,
+				name: "Commands",
+				item: "https://skillscheck.ai/#commands",
+			},
+			{
+				"@type": "ListItem",
+				position: 3,
+				name: cmd.name,
+				item: `https://skillscheck.ai/commands/${slug}`,
+			},
+		],
+	};
+
 	return (
 		<>
+			<script
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires innerHTML
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(techArticleJsonLd) }}
+				type="application/ld+json"
+			/>
+			<script
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires innerHTML
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+				type="application/ld+json"
+			/>
 			<Header />
 			<main className={styles.main}>
 				<article className={styles.article}>
