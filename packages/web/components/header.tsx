@@ -10,6 +10,7 @@ export function Header() {
 				</Link>
 				<div className={styles.links}>
 					<Link href="/docs">Docs</Link>
+					<Link href="/faq">FAQ</Link>
 					<a
 						href="https://github.com/voodootikigod/skills-check"
 						rel="noopener noreferrer"
