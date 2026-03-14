@@ -6,6 +6,11 @@ import { countTokens } from "../../budget/tokenizer.js";
  * Source is optional.
  */
 const WATERMARK_RE = /<!--\s*skill:([^/\s]+)\/(\S+?)(?:\s+(\S+))?\s*-->/;
+const WHITESPACE_SPLIT_RE = /\s+/;
+const HTML_COMMENT_RE = /<!--[\s\S]*?-->/g;
+const WHITESPACE_COLLAPSE_RE = /\s+/g;
+const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---/;
+const FRONTMATTER_INJECT_RE = /^(---[\s\S]*?---\r?\n?)/;
 
 export interface WatermarkInfo {
 	name: string;
@@ -58,8 +63,8 @@ export function computeFrontmatterHash(frontmatterRaw: string): string {
  */
 export function normalizeContent(content: string): string {
 	return content
-		.replace(/<!--[\s\S]*?-->/g, "") // strip HTML comments
-		.replace(/\s+/g, " ") // collapse whitespace
+		.replace(HTML_COMMENT_RE, "") // strip HTML comments
+		.replace(WHITESPACE_COLLAPSE_RE, " ") // collapse whitespace
 		.trim();
 }
 
@@ -81,7 +86,7 @@ export function computePrefixHash(content: string): string {
 		return computeHash(normalized);
 	}
 	// Estimate ~1.3 tokens per word, start with ~385 words then adjust
-	const words = normalized.split(/\s+/);
+	const words = normalized.split(WHITESPACE_SPLIT_RE);
 	const estimate = Math.min(words.length, 385);
 	let prefix = words.slice(0, estimate).join(" ");
 	let tc = countTokens(prefix);
@@ -126,7 +131,7 @@ export function injectWatermarkIntoContent(
 	source?: string
 ): { content: string; injected: boolean } {
 	const wm = generateWatermark(name, version, source);
-	const result = raw.replace(/^(---[\s\S]*?---\r?\n?)/, `$1${wm}\n`);
+	const result = raw.replace(FRONTMATTER_INJECT_RE, `$1${wm}\n`);
 	return { content: result, injected: result !== raw };
 }
 
@@ -134,6 +139,6 @@ export function injectWatermarkIntoContent(
  * Extract raw frontmatter string from SKILL.md content.
  */
 export function extractRawFrontmatter(raw: string): string | null {
-	const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(raw);
+	const match = FRONTMATTER_RE.exec(raw);
 	return match ? match[1] : null;
 }

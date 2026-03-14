@@ -23,14 +23,12 @@ export interface RegistryProduct {
  * Telemetry event emitted when a skill is detected in an LLM request.
  */
 export interface SkillTelemetryEvent {
-	schema_version: 1;
-	timestamp: string;
-	detection: "watermark" | "frontmatter_hash" | "content_hash" | "prefix_hash";
 	confidence: number;
-	skill: {
-		name: string;
-		version: string;
-		source?: string;
+	detection: "watermark" | "frontmatter_hash" | "content_hash" | "prefix_hash";
+	org?: {
+		user?: string;
+		team?: string;
+		project?: string;
 	};
 	request: {
 		id: string;
@@ -38,32 +36,34 @@ export interface SkillTelemetryEvent {
 		skill_tokens: number;
 		total_prompt_tokens?: number;
 	};
-	org?: {
-		user?: string;
-		team?: string;
-		project?: string;
+	schema_version: 1;
+	skill: {
+		name: string;
+		version: string;
+		source?: string;
 	};
+	timestamp: string;
 }
 
 /**
  * A registry of fingerprints for installed skills.
  */
 export interface FingerprintRegistry {
-	version: 1;
 	generated: string;
 	skills: FingerprintEntry[];
+	version: 1;
 }
 
 export interface FingerprintEntry {
-	name: string;
-	version: string;
-	source?: string;
 	fingerprints: {
 		watermark?: string;
 		frontmatter_sha256: string;
 		content_sha256: string;
 		content_prefix_sha256: string;
 	};
-	token_count: number;
+	name: string;
 	path: string;
+	source?: string;
+	token_count: number;
+	version: string;
 }

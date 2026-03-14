@@ -1,7 +1,7 @@
-import { analyzeUsage } from "./analyzer.js";
 import type { UsageReport } from "./analyzer.js";
-import { checkUsagePolicy } from "./policy-check.js";
+import { analyzeUsage } from "./analyzer.js";
 import type { UsagePolicyViolation } from "./policy-check.js";
+import { checkUsagePolicy } from "./policy-check.js";
 import { createReader } from "./readers/index.js";
 
 export type { UsageReport } from "./analyzer.js";
@@ -41,8 +41,12 @@ export async function runUsage(options: UsageOptions = {}): Promise<UsageResult>
 
 	try {
 		const readerOptions: { since?: Date; until?: Date } = {};
-		if (options.since) readerOptions.since = new Date(options.since);
-		if (options.until) readerOptions.until = new Date(options.until);
+		if (options.since) {
+			readerOptions.since = new Date(options.since);
+		}
+		if (options.until) {
+			readerOptions.until = new Date(options.until);
+		}
 
 		const events = await reader.read(readerOptions);
 		const report = analyzeUsage(events, {

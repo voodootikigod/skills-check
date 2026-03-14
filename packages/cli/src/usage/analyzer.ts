@@ -2,23 +2,23 @@ import type { SkillTelemetryEvent } from "@skills-check/schema";
 import { estimateCost } from "../budget/cost.js";
 
 export interface SkillUsageStats {
-	name: string;
-	versions: string[];
-	totalCalls: number;
-	totalTokens: number;
 	avgTokensPerCall: number;
 	estimatedCost: number;
-	models: Record<string, number>;
 	hasVersionDrift: boolean;
+	models: Record<string, number>;
+	name: string;
+	totalCalls: number;
+	totalTokens: number;
+	versions: string[];
 }
 
 export interface UsageReport {
-	period: { since?: string; until?: string };
-	totalCalls: number;
-	totalTokens: number;
-	totalEstimatedCost: number;
-	skills: SkillUsageStats[];
 	generatedAt: string;
+	period: { since?: string; until?: string };
+	skills: SkillUsageStats[];
+	totalCalls: number;
+	totalEstimatedCost: number;
+	totalTokens: number;
 }
 
 /**
@@ -44,7 +44,7 @@ function deduplicateEvents(events: SkillTelemetryEvent[]): SkillTelemetryEvent[]
  */
 export function analyzeUsage(
 	events: SkillTelemetryEvent[],
-	options?: { since?: string; until?: string },
+	options?: { since?: string; until?: string }
 ): UsageReport {
 	const deduplicated = deduplicateEvents(events);
 

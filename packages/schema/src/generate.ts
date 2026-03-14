@@ -12,6 +12,7 @@ const generator = createGenerator(config);
 const schema = generator.createSchema(config.type);
 
 // Preserve the root $ref so skills-check.json $schema validation works
+// biome-ignore lint/complexity/useLiteralKeys: dynamic property assignment needed for JSON Schema
 schema["$ref"] = "#/definitions/Registry";
 
 const outDir = resolve(import.meta.dirname, "../dist");

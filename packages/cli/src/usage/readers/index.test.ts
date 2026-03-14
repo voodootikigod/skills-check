@@ -31,7 +31,7 @@ describe("createReader", () => {
 
 	it("throws for unsupported URI scheme", async () => {
 		await expect(createReader("ftp://server/events")).rejects.toThrow(
-			"Unsupported telemetry store URI scheme",
+			"Unsupported telemetry store URI scheme"
 		);
 	});
 });

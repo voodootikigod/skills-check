@@ -2,27 +2,30 @@ import { discoverPolicyFile, loadPolicyFile } from "../policy/parser.js";
 import type { UsageReport } from "./analyzer.js";
 
 export interface UsagePolicyViolation {
-	skill: string;
-	version: string;
+	callCount: number;
+	message: string;
 	rule: string;
 	severity: "critical" | "high" | "medium";
-	message: string;
-	callCount: number;
+	skill: string;
+	version: string;
 }
 
 /**
  * Cross-reference usage data against .skill-policy.yml.
  * Returns violations found in runtime telemetry.
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: orchestrator function
 export async function checkUsagePolicy(
 	report: UsageReport,
-	policyPath?: string,
+	policyPath?: string
 ): Promise<UsagePolicyViolation[]> {
 	// Find policy file
 	const resolvedPath = policyPath ?? (await discoverPolicyFile(process.cwd()));
-	if (!resolvedPath) return [];
+	if (!resolvedPath) {
+		return [];
+	}
 
-	let policy;
+	let policy: Awaited<ReturnType<typeof loadPolicyFile>>;
 	try {
 		policy = await loadPolicyFile(resolvedPath);
 	} catch {
@@ -69,7 +72,7 @@ export async function checkUsagePolicy(
 	// Sort by severity (critical first) then call count
 	const severityOrder = { critical: 0, high: 1, medium: 2 };
 	violations.sort(
-		(a, b) => severityOrder[a.severity] - severityOrder[b.severity] || b.callCount - a.callCount,
+		(a, b) => severityOrder[a.severity] - severityOrder[b.severity] || b.callCount - a.callCount
 	);
 
 	return violations;

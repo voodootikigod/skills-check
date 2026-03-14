@@ -5,7 +5,11 @@ import type { SkillTelemetryEvent, TelemetryReader, TelemetryReaderOptions } fro
  * Read telemetry events from a newline-delimited JSON file.
  */
 export class JSONLReader implements TelemetryReader {
-	constructor(private filePath: string) {}
+	private readonly filePath: string;
+
+	constructor(filePath: string) {
+		this.filePath = filePath;
+	}
 
 	async read(options?: TelemetryReaderOptions): Promise<SkillTelemetryEvent[]> {
 		const content = await readFile(this.filePath, "utf-8");
@@ -15,14 +19,22 @@ export class JSONLReader implements TelemetryReader {
 		for (const line of lines) {
 			try {
 				const event = JSON.parse(line) as SkillTelemetryEvent;
-				if (event.schema_version !== 1) continue;
-				if (!event.timestamp || !event.skill || !event.request) continue;
+				if (event.schema_version !== 1) {
+					continue;
+				}
+				if (!(event.timestamp && event.skill && event.request)) {
+					continue;
+				}
 
 				// Date filtering
 				if (options?.since || options?.until) {
 					const ts = new Date(event.timestamp);
-					if (options.since && ts < options.since) continue;
-					if (options.until && ts > options.until) continue;
+					if (options.since && ts < options.since) {
+						continue;
+					}
+					if (options.until && ts > options.until) {
+						continue;
+					}
 				}
 
 				events.push(event);

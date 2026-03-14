@@ -23,13 +23,13 @@ export function formatUsageMarkdown(report: UsageReport): string {
 		const versionStr = skill.versions.join(", ");
 		const drift = skill.hasVersionDrift ? " ⚠" : "";
 		lines.push(
-			`| ${skill.name} | ${skill.totalCalls.toLocaleString()} | ${skill.avgTokensPerCall.toLocaleString()} | $${skill.estimatedCost.toFixed(2)} | ${versionStr}${drift} |`,
+			`| ${skill.name} | ${skill.totalCalls.toLocaleString()} | ${skill.avgTokensPerCall.toLocaleString()} | $${skill.estimatedCost.toFixed(2)} | ${versionStr}${drift} |`
 		);
 	}
 
 	lines.push("");
 	lines.push(
-		`**Total:** ${report.totalCalls.toLocaleString()} calls, ~$${report.totalEstimatedCost.toFixed(2)} estimated cost`,
+		`**Total:** ${report.totalCalls.toLocaleString()} calls, ~$${report.totalEstimatedCost.toFixed(2)} estimated cost`
 	);
 
 	return lines.join("\n");
@@ -37,7 +37,7 @@ export function formatUsageMarkdown(report: UsageReport): string {
 
 export function formatUsageMarkdownWithPolicy(
 	report: UsageReport,
-	violations: UsagePolicyViolation[],
+	violations: UsagePolicyViolation[]
 ): string {
 	let output = formatUsageMarkdown(report);
 
