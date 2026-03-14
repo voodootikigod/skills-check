@@ -23,7 +23,7 @@ const faqItems = [
 			},
 			{
 				q: "What is a SKILL.md file?",
-				a: "A SKILL.md file is the standard format for Agent Skills, defined by the Agent Skills spec. It contains YAML frontmatter with metadata (name, description, product-version) followed by markdown content that teaches an AI agent how to use a particular technology correctly and safely.",
+				a: 'A SKILL.md file is the standard format for Agent Skills, defined by the Agent Skills spec. It contains YAML frontmatter with metadata (name, description, compatibility) followed by markdown content that teaches an AI agent how to use a particular technology correctly and safely. The compatibility field uses the format "package@version" (e.g., "react@^19.0.0"). The legacy product-version field is still supported as a fallback.',
 			},
 			{
 				q: "What is skills-check?",
@@ -51,10 +51,11 @@ const faqItems = [
 				q: "How do I check if my AI agent skills are up to date?",
 				a: (
 					<>
-						Run <code>npx skills-check check</code> to compare the <code>product-version</code> in
-						each skill&apos;s frontmatter against the latest version on npm. The{" "}
-						<Link href="/commands/check">check command</Link> reports which skills have drifted and
-						by how many versions, with <code>--ci</code> mode for pipeline integration.
+						Run <code>npx skills-check check</code> to compare the <code>compatibility</code> (or
+						legacy <code>product-version</code>) in each skill&apos;s frontmatter against the latest
+						version on npm. The <Link href="/commands/check">check command</Link> reports which
+						skills have drifted and by how many versions, with <code>--ci</code> mode for pipeline
+						integration.
 					</>
 				),
 			},
@@ -70,12 +71,13 @@ const faqItems = [
 				),
 			},
 			{
-				q: "What is product-version drift in agent skills?",
+				q: "What is version drift in agent skills?",
 				a: (
 					<>
-						Product-version drift occurs when the <code>product-version</code> field in a
-						skill&apos;s frontmatter falls behind the latest release on npm. This means the skill
-						may contain outdated instructions, deprecated APIs, or missing features. The{" "}
+						Version drift occurs when the <code>compatibility</code> (or legacy{" "}
+						<code>product-version</code>) field in a skill&apos;s frontmatter falls behind the
+						latest release on npm. This means the skill may contain outdated instructions,
+						deprecated APIs, or missing features. The{" "}
 						<Link href="/commands/check">check command</Link> detects this automatically.
 					</>
 				),
@@ -208,17 +210,17 @@ const jsonLdAnswers: Record<string, string> = {
 	"What is an Agent Skill?":
 		"An Agent Skill is a markdown document (SKILL.md) with YAML frontmatter that instructs AI coding agents — such as Claude Code, Cursor, and Codex — how to work with specific products, frameworks, and patterns. Skills look like documentation but are treated as executable instructions by agents with file system and shell access.",
 	"What is a SKILL.md file?":
-		"A SKILL.md file is the standard format for Agent Skills, defined by the Agent Skills spec. It contains YAML frontmatter with metadata (name, description, product-version) followed by markdown content that teaches an AI agent how to use a particular technology correctly and safely.",
+		'A SKILL.md file is the standard format for Agent Skills, defined by the Agent Skills spec. It contains YAML frontmatter with metadata (name, description, compatibility) followed by markdown content that teaches an AI agent how to use a particular technology correctly and safely. The compatibility field uses the format "package@version" (e.g., "react@^19.0.0"). The legacy product-version field is still supported as a fallback.',
 	"What is skills-check?":
 		"skills-check is the quality and integrity layer for Agent Skills. It answers whether your skills are correct, safe, current, and efficient by providing commands for freshness detection, security auditing, metadata linting, token budget analysis, semver verification, policy enforcement, and eval testing.",
 	"How is skills-check different from linters or security scanners?":
 		"Traditional linters check code syntax and style, while security scanners look for vulnerabilities in dependencies. skills-check is purpose-built for SKILL.md files — it detects hallucinated packages, prompt injection patterns, version drift against live registries, and measures the token cost of loading skills into an agent's context window.",
 	"How do I check if my AI agent skills are up to date?":
-		"Run npx skills-check check to compare the product-version in each skill's frontmatter against the latest version on npm. The check command reports which skills have drifted and by how many versions, with --ci mode for pipeline integration.",
+		"Run npx skills-check check to compare the compatibility (or legacy product-version) in each skill's frontmatter against the latest version on npm. The check command reports which skills have drifted and by how many versions, with --ci mode for pipeline integration.",
 	"How do I automatically update stale agent skills?":
 		"The refresh command uses an LLM to propose targeted updates to stale skill files. Run npx skills-check refresh to fetch changelogs, generate diffs, and optionally apply changes. It supports Anthropic, OpenAI, and Google providers.",
-	"What is product-version drift in agent skills?":
-		"Product-version drift occurs when the product-version field in a skill's frontmatter falls behind the latest release on npm. This means the skill may contain outdated instructions, deprecated APIs, or missing features. The check command detects this automatically.",
+	"What is version drift in agent skills?":
+		"Version drift occurs when the compatibility (or legacy product-version) field in a skill's frontmatter falls behind the latest release on npm. This means the skill may contain outdated instructions, deprecated APIs, or missing features. The check command detects this automatically.",
 	"How do I audit SKILL.md files for security issues?":
 		"Run npx skills-check audit to scan your skill files. The audit command checks for hallucinated packages that don't exist on registries, prompt injection patterns, dangerous shell commands, dead URLs, and metadata gaps. Output formats include terminal, JSON, Markdown, and SARIF for GitHub Security integration.",
 	"How do I detect hallucinated packages in agent skills?":

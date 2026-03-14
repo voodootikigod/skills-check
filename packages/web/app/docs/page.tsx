@@ -730,14 +730,15 @@ npx skills-check usage --store ./telemetry.jsonl --ci --fail-on high`}
 					<section>
 						<h2 id="frontmatter">SKILL.md Frontmatter</h2>
 						<p>
-							Each SKILL.md file should include a <code>product-version</code> field in its YAML
-							frontmatter:
+							Each SKILL.md file should include a <code>compatibility</code> field in its YAML
+							frontmatter. This is the spec-native format that combines package name and version
+							constraint in a single self-describing string:
 						</p>
 						<pre>
 							<code>
 								{`---
 name: ai-sdk-core
-product-version: "4.2.0"
+compatibility: "ai@^4.2.0"
 ---
 
 # AI SDK Core
@@ -745,6 +746,21 @@ product-version: "4.2.0"
 Your skill content here...`}
 							</code>
 						</pre>
+						<p>
+							The legacy <code>product-version</code> field is still supported as a deprecated
+							fallback:
+						</p>
+						<pre>
+							<code>
+								{`---
+name: ai-sdk-core
+product-version: "4.2.0"
+---`}
+							</code>
+						</pre>
+						<p>
+							When both fields are present, <code>compatibility</code> takes precedence.
+						</p>
 					</section>
 
 					<section>

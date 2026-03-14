@@ -12,11 +12,10 @@ function makeContext(frontmatter: Record<string, unknown>): CheckContext {
 }
 
 describe("metadataChecker", () => {
-	it("passes with all required fields", async () => {
+	it("passes with all required and recommended fields", async () => {
 		const ctx = makeContext({
 			name: "my-skill",
 			description: "A useful skill",
-			"product-version": "1.0.0",
 			version: "1.0",
 			author: "test",
 		});
@@ -27,7 +26,6 @@ describe("metadataChecker", () => {
 	it("reports missing name as medium", async () => {
 		const ctx = makeContext({
 			description: "A skill",
-			"product-version": "1.0.0",
 		});
 		const findings = await metadataChecker.check(ctx);
 		const nameFinding = findings.find((f) => f.message.includes("name"));
@@ -38,7 +36,6 @@ describe("metadataChecker", () => {
 	it("reports missing description as medium", async () => {
 		const ctx = makeContext({
 			name: "my-skill",
-			"product-version": "1.0.0",
 		});
 		const findings = await metadataChecker.check(ctx);
 		const descFinding = findings.find((f) => f.message.includes("description"));
@@ -46,22 +43,20 @@ describe("metadataChecker", () => {
 		expect(descFinding?.severity).toBe("medium");
 	});
 
-	it("reports missing product-version as medium", async () => {
+	it("does not require product-version (now handled by lint conditional rule)", async () => {
 		const ctx = makeContext({
 			name: "my-skill",
 			description: "A skill",
 		});
 		const findings = await metadataChecker.check(ctx);
 		const versionFinding = findings.find((f) => f.message.includes("product-version"));
-		expect(versionFinding).toBeDefined();
-		expect(versionFinding?.severity).toBe("medium");
+		expect(versionFinding).toBeUndefined();
 	});
 
 	it("reports missing recommended fields as low", async () => {
 		const ctx = makeContext({
 			name: "my-skill",
 			description: "A skill",
-			"product-version": "1.0.0",
 		});
 		const findings = await metadataChecker.check(ctx);
 		expect(findings.every((f) => f.severity === "low")).toBe(true);
@@ -72,7 +67,6 @@ describe("metadataChecker", () => {
 		const ctx = makeContext({
 			name: "",
 			description: "A skill",
-			"product-version": "1.0.0",
 		});
 		const findings = await metadataChecker.check(ctx);
 		const nameFinding = findings.find((f) => f.message.includes("name"));
@@ -82,8 +76,8 @@ describe("metadataChecker", () => {
 	it("reports all missing fields for empty frontmatter", async () => {
 		const ctx = makeContext({});
 		const findings = await metadataChecker.check(ctx);
-		// 3 required (medium) + 2 recommended (low) = 5
-		expect(findings).toHaveLength(5);
+		// 2 required (medium) + 2 recommended (low) = 4
+		expect(findings).toHaveLength(4);
 	});
 
 	it("uses correct category", async () => {

@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const WHITESPACE_SPLIT_RE = /\s+/;
+const SHA256_HEX_RE = /^[a-f0-9]{64}$/;
+
 vi.mock("../budget/tokenizer.js", () => ({
-	countTokens: vi.fn((text: string) => text.split(/\s+/).filter(Boolean).length),
+	countTokens: vi.fn((text: string) => text.split(WHITESPACE_SPLIT_RE).filter(Boolean).length),
 	resetTokenizer: vi.fn(),
 }));
 
@@ -53,9 +56,9 @@ describe("runFingerprint", () => {
 		expect(result.skills).toHaveLength(1);
 		expect(result.skills[0].name).toBe("react");
 		expect(result.skills[0].version).toBe("19.1.0");
-		expect(result.skills[0].fingerprints.frontmatter_sha256).toMatch(/^[a-f0-9]{64}$/);
-		expect(result.skills[0].fingerprints.content_sha256).toMatch(/^[a-f0-9]{64}$/);
-		expect(result.skills[0].fingerprints.content_prefix_sha256).toMatch(/^[a-f0-9]{64}$/);
+		expect(result.skills[0].fingerprints.frontmatter_sha256).toMatch(SHA256_HEX_RE);
+		expect(result.skills[0].fingerprints.content_sha256).toMatch(SHA256_HEX_RE);
+		expect(result.skills[0].fingerprints.content_prefix_sha256).toMatch(SHA256_HEX_RE);
 		expect(result.skills[0].token_count).toBeGreaterThan(0);
 	});
 

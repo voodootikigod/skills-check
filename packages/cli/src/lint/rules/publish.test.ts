@@ -21,6 +21,17 @@ describe("checkPublishReady", () => {
 		expect(checkPublishReady(file)).toEqual([]);
 	});
 
+	it("resolves fields from metadata location", () => {
+		const file = makeFile({
+			metadata: {
+				author: "test-author",
+				repository: "https://github.com/test/repo",
+			},
+			license: "MIT",
+		});
+		expect(checkPublishReady(file)).toEqual([]);
+	});
+
 	it("reports missing author as fixable", () => {
 		const file = makeFile({
 			license: "MIT",
@@ -55,7 +66,7 @@ describe("checkPublishReady", () => {
 		expect(repoFinding?.fixable).toBe(true);
 	});
 
-	it("reports invalid SPDX license as not fixable", () => {
+	it("reports invalid SPDX license as warning (spec allows any string)", () => {
 		const file = makeFile({
 			author: "test-author",
 			license: "INVALID",
@@ -64,7 +75,8 @@ describe("checkPublishReady", () => {
 		const findings = checkPublishReady(file);
 		const licenseFinding = findings.find((f) => f.field === "license");
 		expect(licenseFinding).toBeDefined();
-		expect(licenseFinding?.message).toContain("Invalid SPDX");
+		expect(licenseFinding?.level).toBe("warning");
+		expect(licenseFinding?.message).toContain("not a recognized SPDX");
 		expect(licenseFinding?.fixable).toBe(false);
 	});
 

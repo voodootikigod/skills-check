@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SkillTelemetryEvent } from "@skills-check/schema";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../budget/cost.js", () => ({
 	estimateCost: vi.fn((tokens: number) => ({
 		model: "claude-sonnet",
-		costPer1KLoads: tokens * 0.000003,
+		costPer1KLoads: tokens * 0.000_003,
 		tokens,
 	})),
 	getAvailableModels: vi.fn(() => ["claude-sonnet", "claude-opus", "gpt-4o"]),

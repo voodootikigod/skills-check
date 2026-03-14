@@ -4,6 +4,11 @@ import { generateObject } from "ai";
 import chalk from "chalk";
 import matter from "gray-matter";
 import { fetchChangelog } from "../changelog.js";
+import {
+	extractVersionedPackages,
+	formatCompatibility,
+	parseCompatibility,
+} from "../compatibility/index.js";
 import { diffStats, formatDiff } from "../diff.js";
 import { buildSystemPrompt, buildUserPrompt } from "../llm/prompts.js";
 import { resolveModel } from "../llm/providers.js";
@@ -25,6 +30,69 @@ interface RefreshOptions {
 	provider?: string;
 	registry?: string;
 	yes?: boolean;
+}
+
+/**
+ * Resolve the tracked version from a skill file's frontmatter.
+ * Checks compatibility (for a specific package) first, then product-version.
+ */
+function resolveSkillVersion(
+	fm: Record<string, unknown>,
+	targetPackage?: string
+): string | undefined {
+	if (typeof fm.compatibility === "string") {
+		const versioned = extractVersionedPackages(parseCompatibility(fm.compatibility));
+		if (targetPackage) {
+			const match = versioned.find((e) => e.package === targetPackage);
+			if (match?.version) {
+				return match.version;
+			}
+		}
+		if (versioned.length > 0 && versioned[0].version) {
+			return versioned[0].version;
+		}
+	}
+	if (typeof fm["product-version"] === "string") {
+		return fm["product-version"];
+	}
+	return undefined;
+}
+
+/**
+ * Patch the version in a skill file's frontmatter to the target version.
+ * Updates whichever field the skill uses (compatibility or product-version).
+ */
+function patchVersion(
+	written: Awaited<ReturnType<typeof readSkillFile>>,
+	targetVersion: string,
+	targetPackage?: string
+): string {
+	const fm = written.frontmatter;
+
+	if (typeof fm.compatibility === "string") {
+		const entries = parseCompatibility(fm.compatibility);
+		const versioned = extractVersionedPackages(entries);
+		if (versioned.length > 0) {
+			// Update the matching package or the first versioned entry
+			for (const entry of entries) {
+				if (entry.version && (!targetPackage || entry.package === targetPackage)) {
+					entry.version = targetVersion;
+					break;
+				}
+			}
+			fm.compatibility = formatCompatibility(entries);
+			return matter.stringify(written.content, fm);
+		}
+	}
+
+	if (fm["product-version"] !== undefined) {
+		fm["product-version"] = targetVersion;
+		return matter.stringify(written.content, fm);
+	}
+
+	// Neither field exists — add compatibility
+	fm.compatibility = `${targetPackage ?? "unknown"}@${targetVersion}`;
+	return matter.stringify(written.content, fm);
 }
 
 /**
@@ -240,18 +308,17 @@ export async function refreshCommand(
 			if (shouldApply) {
 				await writeSkillFile(skillPath, llmResult.updatedContent);
 
-				// Verify the LLM actually bumped the frontmatter product-version
+				// Verify the LLM actually bumped the version
 				const written = await readSkillFile(skillPath);
-				const writtenVersion = written.frontmatter["product-version"] as string | undefined;
+				const writtenVersion = resolveSkillVersion(written.frontmatter, result.package);
 
 				if (writtenVersion !== result.latestVersion) {
 					console.log(
 						chalk.yellow(
-							`  ⚠ LLM did not bump product-version (got "${writtenVersion ?? "missing"}", expected "${result.latestVersion}") — patching`
+							`  ⚠ LLM did not bump version (got "${writtenVersion ?? "missing"}", expected "${result.latestVersion}") — patching`
 						)
 					);
-					written.frontmatter["product-version"] = result.latestVersion;
-					const patched = matter.stringify(written.content, written.frontmatter);
+					const patched = patchVersion(written, result.latestVersion, result.package);
 					await writeSkillFile(skillPath, patched);
 				}
 

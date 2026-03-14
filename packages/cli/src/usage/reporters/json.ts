@@ -7,7 +7,7 @@ export function formatUsageJson(report: UsageReport): string {
 
 export function formatUsageJsonWithPolicy(
 	report: UsageReport,
-	violations: UsagePolicyViolation[],
+	violations: UsagePolicyViolation[]
 ): string {
 	return JSON.stringify({ report, policyViolations: violations }, null, 2);
 }

@@ -1,10 +1,34 @@
 import { lstat, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
+import { extractVersionedPackages, parseCompatibility } from "./compatibility/index.js";
 import type { ScannedSkill } from "./types.js";
 
 /**
- * Scan a directory of skills for SKILL.md files and extract frontmatter.
+ * Try to read a skill file from a directory, preferring SKILL.md over skill.md.
+ */
+async function readSkillContent(
+	dirPath: string
+): Promise<{ content: string; path: string } | null> {
+	const uppercase = join(dirPath, "SKILL.md");
+	try {
+		const content = await readFile(uppercase, "utf-8");
+		return { content, path: uppercase };
+	} catch {
+		// Try lowercase fallback
+	}
+
+	const lowercase = join(dirPath, "skill.md");
+	try {
+		const content = await readFile(lowercase, "utf-8");
+		return { content, path: lowercase };
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Scan a directory of skills for SKILL.md (or skill.md) files and extract frontmatter.
  * Expects directory structure: skills/{skill-name}/SKILL.md
  */
 export async function scanSkills(skillsDir: string): Promise<ScannedSkill[]> {
@@ -18,8 +42,6 @@ export async function scanSkills(skillsDir: string): Promise<ScannedSkill[]> {
 	const results = await Promise.all(
 		// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: orchestrator function
 		entries.map(async (entry): Promise<ScannedSkill | null> => {
-			const skillPath = join(skillsDir, entry, "SKILL.md");
-
 			try {
 				const info = await lstat(join(skillsDir, entry));
 				if (!info.isDirectory()) {
@@ -29,13 +51,12 @@ export async function scanSkills(skillsDir: string): Promise<ScannedSkill[]> {
 				return null;
 			}
 
-			let content: string;
-			try {
-				content = await readFile(skillPath, "utf-8");
-			} catch {
-				// No SKILL.md in this directory, skip
+			const result = await readSkillContent(join(skillsDir, entry));
+			if (!result) {
 				return null;
 			}
+
+			const { content, path: skillPath } = result;
 
 			try {
 				const { data } = matter(content);
@@ -66,6 +87,34 @@ export async function scanSkills(skillsDir: string): Promise<ScannedSkill[]> {
 				}
 				if (!skill.product && typeof data.product === "string") {
 					skill.product = data.product;
+				}
+
+				// Parse compatibility field
+				if (typeof data.compatibility === "string") {
+					skill.compatibility = data.compatibility;
+					skill.compatibilityEntries = parseCompatibility(data.compatibility);
+				}
+
+				// Extract allowed-tools (experimental spec field)
+				if (typeof data["allowed-tools"] === "string") {
+					skill.allowedTools = data["allowed-tools"];
+				}
+
+				// Build resolvedPackages via precedence chain
+				const versionedCompat = skill.compatibilityEntries
+					? extractVersionedPackages(skill.compatibilityEntries)
+					: [];
+
+				if (versionedCompat.length > 0) {
+					skill.resolvedPackages = versionedCompat;
+				} else if (skill.productVersion) {
+					skill.resolvedPackages = [
+						{
+							package: skill.product ?? skill.name,
+							version: skill.productVersion,
+							raw: skill.productVersion,
+						},
+					];
 				}
 
 				return skill;

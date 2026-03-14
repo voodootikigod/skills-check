@@ -4,9 +4,10 @@ import type { UsagePolicyViolation } from "../policy-check.js";
 
 export function formatUsageTerminal(report: UsageReport): string {
 	const lines: string[] = [];
-	const periodStr = report.period.since || report.period.until
-		? `${report.period.since ?? "..."} to ${report.period.until ?? "now"}`
-		: "all time";
+	const periodStr =
+		report.period.since || report.period.until
+			? `${report.period.since ?? "..."} to ${report.period.until ?? "now"}`
+			: "all time";
 
 	lines.push(chalk.bold(`Skills Usage Report (${periodStr})`));
 	lines.push("═".repeat(70));
@@ -18,9 +19,11 @@ export function formatUsageTerminal(report: UsageReport): string {
 	}
 
 	lines.push(
-		`  ${chalk.dim("Skill".padEnd(25))}${chalk.dim("Calls".padEnd(10))}${chalk.dim("Tokens/call".padEnd(14))}${chalk.dim("Est. Cost".padEnd(12))}${chalk.dim("Version(s)")}`,
+		`  ${chalk.dim("Skill".padEnd(25))}${chalk.dim("Calls".padEnd(10))}${chalk.dim("Tokens/call".padEnd(14))}${chalk.dim("Est. Cost".padEnd(12))}${chalk.dim("Version(s)")}`
 	);
-	lines.push(`  ${"─".repeat(25)}${"─".repeat(10)}${"─".repeat(14)}${"─".repeat(12)}${"─".repeat(15)}`);
+	lines.push(
+		`  ${"─".repeat(25)}${"─".repeat(10)}${"─".repeat(14)}${"─".repeat(12)}${"─".repeat(15)}`
+	);
 
 	for (const skill of report.skills) {
 		const versionStr = skill.versions.join(", ");
@@ -34,11 +37,9 @@ export function formatUsageTerminal(report: UsageReport): string {
 	}
 
 	lines.push("");
+	lines.push(`  ${chalk.yellow("⚠")} = multiple versions in use or version drift detected`);
 	lines.push(
-		`  ${chalk.yellow("⚠")} = multiple versions in use or version drift detected`,
-	);
-	lines.push(
-		`  ${chalk.bold("Total:")} ${report.totalCalls.toLocaleString()} calls, ~$${report.totalEstimatedCost.toFixed(2)} estimated cost`,
+		`  ${chalk.bold("Total:")} ${report.totalCalls.toLocaleString()} calls, ~$${report.totalEstimatedCost.toFixed(2)} estimated cost`
 	);
 
 	return lines.join("\n");
@@ -46,7 +47,7 @@ export function formatUsageTerminal(report: UsageReport): string {
 
 export function formatUsageTerminalWithPolicy(
 	report: UsageReport,
-	violations: UsagePolicyViolation[],
+	violations: UsagePolicyViolation[]
 ): string {
 	let output = formatUsageTerminal(report);
 

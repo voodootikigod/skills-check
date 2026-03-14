@@ -11,7 +11,9 @@ export interface SkillPolicy {
 	freshness?: {
 		max_age_days?: number;
 		max_version_drift?: "major" | "minor" | "patch";
+		/** @deprecated Use require_version_tracking instead */
 		require_product_version?: boolean;
+		require_version_tracking?: boolean;
 	};
 	metadata?: {
 		required_fields?: string[];

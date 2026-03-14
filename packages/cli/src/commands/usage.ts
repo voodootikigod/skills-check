@@ -2,14 +2,8 @@ import chalk from "chalk";
 import type { UsageOptions } from "../usage/index.js";
 import { runUsage } from "../usage/index.js";
 import { formatUsageJson, formatUsageJsonWithPolicy } from "../usage/reporters/json.js";
-import {
-	formatUsageMarkdown,
-	formatUsageMarkdownWithPolicy,
-} from "../usage/reporters/markdown.js";
-import {
-	formatUsageTerminal,
-	formatUsageTerminalWithPolicy,
-} from "../usage/reporters/terminal.js";
+import { formatUsageMarkdown, formatUsageMarkdownWithPolicy } from "../usage/reporters/markdown.js";
+import { formatUsageTerminal, formatUsageTerminalWithPolicy } from "../usage/reporters/terminal.js";
 
 interface UsageCommandOptions {
 	checkPolicy?: boolean;
@@ -28,6 +22,7 @@ interface UsageCommandOptions {
 	verbose?: boolean;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: orchestrator function
 export async function usageCommand(options: UsageCommandOptions): Promise<number> {
 	if (options.verbose && options.quiet) {
 		console.error(chalk.red("Cannot use --verbose and --quiet together."));
@@ -51,22 +46,32 @@ export async function usageCommand(options: UsageCommandOptions): Promise<number
 	const { report, violations } = await runUsage(usageOptions);
 
 	// Determine format
-	const format = options.json ? "json" : options.markdown ? "markdown" : (options.format ?? "terminal");
+	let format: string;
+	if (options.json) {
+		format = "json";
+	} else if (options.markdown) {
+		format = "markdown";
+	} else {
+		format = options.format ?? "terminal";
+	}
 
 	// Format output
 	let output: string;
 	if (format === "json") {
-		output = violations.length > 0
-			? formatUsageJsonWithPolicy(report, violations)
-			: formatUsageJson(report);
+		output =
+			violations.length > 0
+				? formatUsageJsonWithPolicy(report, violations)
+				: formatUsageJson(report);
 	} else if (format === "markdown") {
-		output = violations.length > 0
-			? formatUsageMarkdownWithPolicy(report, violations)
-			: formatUsageMarkdown(report);
+		output =
+			violations.length > 0
+				? formatUsageMarkdownWithPolicy(report, violations)
+				: formatUsageMarkdown(report);
 	} else {
-		output = violations.length > 0
-			? formatUsageTerminalWithPolicy(report, violations)
-			: formatUsageTerminal(report);
+		output =
+			violations.length > 0
+				? formatUsageTerminalWithPolicy(report, violations)
+				: formatUsageTerminal(report);
 	}
 
 	if (!options.quiet) {

@@ -2,7 +2,7 @@
 
 Quality & integrity layer for [Agent Skills](https://agentskills.io) — like `npm outdated` for skill knowledge.
 
-Skills that reference versioned products (via `product-version` in frontmatter) can drift as upstream packages ship new releases. `skills-check` detects this drift, audits security, lints metadata, analyzes token budgets, enforces policy, and more.
+Skills that reference versioned products (via `compatibility` or `product-version` in frontmatter) can drift as upstream packages ship new releases. `skills-check` detects this drift, audits security, lints metadata, analyzes token budgets, enforces policy, and more.
 
 ## Install
 
@@ -547,11 +547,11 @@ Skills declare their product version in YAML frontmatter:
 ---
 name: ai-sdk-core
 description: "Generate text with Vercel AI SDK..."
-product-version: "6.0.105"
+compatibility: "ai@^6.0.0"
 ---
 ```
 
-The `init` command reads this field and groups skills by shared version + name prefix.
+The spec-native `compatibility` field uses `package@semver` format (e.g., `"next@^15.0.0, react@19.0.0"`). The legacy `product-version` field is still supported as a fallback. The `init` command reads version information and groups skills by shared version + name prefix.
 
 ## CI Integration
 

@@ -7,7 +7,7 @@ import styles from "./concepts.module.css";
 export const metadata: Metadata = {
 	title: "Concepts & Glossary",
 	description:
-		"Key terms and concepts in the Agent Skills ecosystem: SKILL.md format, product-version drift, hallucinated packages, token budgets, semver verification, policy enforcement, and more.",
+		"Key terms and concepts in the Agent Skills ecosystem: SKILL.md format, compatibility and version drift, hallucinated packages, token budgets, semver verification, policy enforcement, and more.",
 	alternates: {
 		canonical: "https://skillscheck.ai/concepts",
 	},
@@ -29,13 +29,13 @@ const jsonLd = {
 			"@type": "DefinedTerm",
 			name: "SKILL.md",
 			description:
-				"The standard file format for agent skills. Contains YAML frontmatter (name, description, version, product-version) followed by a markdown body with instructions, code examples, and patterns.",
+				"The standard file format for agent skills. Contains YAML frontmatter (name, description, version, compatibility) followed by a markdown body with instructions, code examples, and patterns.",
 		},
 		{
 			"@type": "DefinedTerm",
-			name: "Product-version drift",
+			name: "Version drift",
 			description:
-				"When a skill's product-version frontmatter references an outdated version of the product it covers. For example, a React skill referencing v18 when v19 is current.",
+				'When a skill\'s compatibility (or product-version) frontmatter references an outdated version of the product it covers. For example, a React skill with compatibility: "react@^18.0.0" when v19 is current.',
 		},
 		{
 			"@type": "DefinedTerm",
@@ -149,19 +149,21 @@ export default function ConceptsPage() {
 							<p className={styles.termDef}>
 								The standard file format for agent skills. Contains YAML frontmatter (
 								<code>name</code>, <code>description</code>, <code>version</code>,{" "}
-								<code>product-version</code>) followed by a markdown body with instructions, code
+								<code>compatibility</code>) followed by a markdown body with instructions, code
 								examples, and patterns. Validated by the <Link href="/commands/lint">lint</Link>{" "}
 								command.
 							</p>
 						</div>
 
-						<div className={styles.term} id="product-version-drift">
-							<h3 className={styles.termName}>Product-version drift</h3>
+						<div className={styles.term} id="version-drift">
+							<h3 className={styles.termName}>Version drift</h3>
 							<p className={styles.termDef}>
-								When a skill&apos;s <code>product-version</code> frontmatter references an outdated
-								version of the product it covers. For example, a React skill referencing v18 when
-								v19 is current. Detected by the <Link href="/commands/check">check</Link> command
-								and resolvable via <Link href="/commands/refresh">refresh</Link>.
+								When a skill&apos;s <code>compatibility</code> (or legacy{" "}
+								<code>product-version</code>) frontmatter references an outdated version of the
+								product it covers. For example, a React skill with{" "}
+								<code>compatibility: &quot;react@^18.0.0&quot;</code> when v19 is current. Detected
+								by the <Link href="/commands/check">check</Link> command and resolvable via{" "}
+								<Link href="/commands/refresh">refresh</Link>.
 							</p>
 						</div>
 

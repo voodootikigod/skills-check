@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const WHITESPACE_SPLIT_RE = /\s+/;
+const SHA256_HEX_RE = /^[a-f0-9]{64}$/;
+
 vi.mock("../../budget/tokenizer.js", () => ({
-	countTokens: vi.fn((text: string) => text.split(/\s+/).filter(Boolean).length),
+	countTokens: vi.fn((text: string) => text.split(WHITESPACE_SPLIT_RE).filter(Boolean).length),
 	resetTokenizer: vi.fn(),
 }));
 
@@ -71,7 +74,7 @@ describe("computeFrontmatterHash", () => {
 
 	it("returns a 64-char hex string for sha256", () => {
 		const hash = computeFrontmatterHash("test");
-		expect(hash).toMatch(/^[a-f0-9]{64}$/);
+		expect(hash).toMatch(SHA256_HEX_RE);
 	});
 });
 
@@ -114,7 +117,7 @@ describe("computePrefixHash", () => {
 
 	it("returns a valid hex hash", () => {
 		const hash = computePrefixHash("some test content");
-		expect(hash).toMatch(/^[a-f0-9]{64}$/);
+		expect(hash).toMatch(SHA256_HEX_RE);
 	});
 });
 

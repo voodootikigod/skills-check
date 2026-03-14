@@ -12,28 +12,72 @@ function makeFile(frontmatter: Record<string, unknown>, content: string): SkillF
 }
 
 describe("checkConditional", () => {
-	it("warns about missing product-version when product references exist", () => {
+	it("warns about missing version tracking when product references exist", () => {
 		const file = makeFile({}, "Run `npm install express` to get started.");
 		const findings = checkConditional(file);
-		const pvFinding = findings.find((f) => f.field === "product-version");
-		expect(pvFinding).toBeDefined();
-		expect(pvFinding?.level).toBe("warning");
+		const vFinding = findings.find((f) => f.field === "compatibility");
+		expect(vFinding).toBeDefined();
+		expect(vFinding?.level).toBe("warning");
+		expect(vFinding?.message).toContain("compatibility");
+		expect(vFinding?.message).toContain("product-version");
 	});
 
-	it("does not warn about product-version when it is present", () => {
+	it("does not warn when product-version is present", () => {
 		const file = makeFile(
 			{ "product-version": "4.18.0" },
 			"Run `npm install express` to get started."
 		);
 		const findings = checkConditional(file);
-		const pvFinding = findings.find((f) => f.field === "product-version");
-		expect(pvFinding).toBeUndefined();
+		const vFinding = findings.find((f) => f.field === "compatibility");
+		expect(vFinding).toBeUndefined();
 	});
 
-	it("does not warn about product-version for generic content", () => {
+	it("does not warn when compatibility with versioned entries is present", () => {
+		const file = makeFile(
+			{ compatibility: "express@4.18.0" },
+			"Run `npm install express` to get started."
+		);
+		const findings = checkConditional(file);
+		const vFinding = findings.find((f) => f.field === "compatibility");
+		expect(vFinding).toBeUndefined();
+	});
+
+	it("warns when compatibility has only non-versioned entries", () => {
+		const file = makeFile(
+			{ compatibility: "docker, network" },
+			"Run `npm install express` to get started."
+		);
+		const findings = checkConditional(file);
+		const vFinding = findings.find((f) => f.field === "compatibility");
+		expect(vFinding).toBeDefined();
+	});
+
+	it("does not warn about version tracking for generic content", () => {
 		const file = makeFile({}, "This skill provides general coding best practices.");
 		const findings = checkConditional(file);
-		expect(findings.filter((f) => f.field === "product-version")).toHaveLength(0);
+		expect(findings.filter((f) => f.field === "compatibility")).toHaveLength(0);
+	});
+
+	it("emits info-level deprecation notice when product-version present without compatibility", () => {
+		const file = makeFile(
+			{ "product-version": "4.18.0" },
+			"Run `npm install express` to get started."
+		);
+		const findings = checkConditional(file);
+		const deprecation = findings.find((f) => f.field === "product-version" && f.level === "info");
+		expect(deprecation).toBeDefined();
+		expect(deprecation?.message).toContain("migrating");
+		expect(deprecation?.message).toContain("compatibility");
+	});
+
+	it("does not emit deprecation notice when both compatibility and product-version present", () => {
+		const file = makeFile(
+			{ "product-version": "4.18.0", compatibility: "express@4.18.0" },
+			"Run `npm install express` to get started."
+		);
+		const findings = checkConditional(file);
+		const deprecation = findings.find((f) => f.field === "product-version" && f.level === "info");
+		expect(deprecation).toBeUndefined();
 	});
 
 	it("warns about missing agents when agent-specific content exists", () => {

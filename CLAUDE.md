@@ -65,7 +65,7 @@ When implementing features, always check the relevant PRD first. When a PRD is t
 
 | Command | Status | What It Does |
 |---------|--------|-------------|
-| `check` | ✅ Shipped | Detect version drift in skills by comparing `product-version` frontmatter against npm registry |
+| `check` | ✅ Shipped | Detect version drift in skills by comparing `compatibility` or `product-version` frontmatter against npm registry |
 | `report` | ✅ Shipped | Generate a formatted report of check results |
 | `refresh` | ✅ Shipped | AI-assisted update of stale skill files using LLMs (Anthropic, OpenAI, Google) |
 | `audit` | ✅ Shipped | Security scan: hallucinated packages, prompt injection, dangerous commands, dead URLs, metadata gaps |
@@ -126,10 +126,12 @@ cd packages/web && npm run dev
 
 ## Code Style (Biome)
 
-- Tab indentation, 100-char line width
+- **Tab indentation** (not spaces), 100-char line width
 - Double quotes, semicolons always
 - Auto-organized imports
-- Config is in root `biome.json` — no ESLint or Prettier
+- Config is in root `biome.jsonc` — no ESLint or Prettier
+- Editor configs: `.editorconfig`, `.vscode/settings.json`, `.zed/settings.json`
+- **CRITICAL:** All TypeScript/JavaScript files use tabs. The `Edit` tool must preserve exact indentation from `Read` output. When writing new files, use tab characters (`\t`), never spaces for indentation.
 
 ## Architecture Notes
 
@@ -158,7 +160,7 @@ audit/
     advisory.ts                    # Known hallucinated packages (Aikido Security, Socket.dev research)
     injection.ts                   # Prompt injection: override instructions, exfiltration, obfuscation
     commands.ts                    # Dangerous commands: destructive, pipe-to-shell, sensitive access
-    metadata.ts                    # Frontmatter completeness (required: name, description, product-version)
+    metadata.ts                    # Frontmatter completeness (required: name, description)
     urls.ts                        # URL liveness via HEAD requests (10s timeout)
   reporters/
     terminal.ts                    # Chalk-colored, grouped by file, severity icons
@@ -170,6 +172,10 @@ audit/
 Key design: extractors run once per file, checkers consume extracted data. Findings pass through `.skills-checkignore` + inline comment filtering. Registry lookups use layered caching (in-memory Map + disk with TTL).
 
 **This extractor/checker/reporter pattern is the template used by all commands.** Each command follows the same architecture: parse SKILL.md → extract relevant data → run checks → filter → report. Extractors and reporters are reused across commands where possible.
+
+### Compatibility (`packages/cli/src/compatibility/`)
+
+Parser for the spec-native `compatibility` frontmatter field. Splits `"next@^15.0.0, react@19.0.0, docker"` into structured `CompatibilityEntry[]` with package name, optional semver/range, and raw text. Used across all commands via a precedence chain: `compatibility` (preferred) → `product-version` (deprecated fallback). The `resolvedPackages` field on `ScannedSkill` provides a unified view regardless of which field the skill uses. `product-version` still works everywhere but `lint` emits an `info`-level migration notice encouraging adoption of `compatibility`.
 
 ### Shared Infrastructure (`packages/cli/src/shared/`)
 
@@ -189,7 +195,7 @@ Semver verification using a two-layer classifier: heuristic rules (section diffs
 
 ### Lint (`packages/cli/src/lint/`)
 
-Metadata validation with four rule sets: required fields (name, description), publish-ready fields (author, license, repository), conditional fields (product-version when products referenced, agents when agent-specific content), and format validation (semver, SPDX, URLs). Auto-fix populates missing fields from git context. SPDX validation covers 100+ identifiers with OR/AND expressions.
+Metadata validation with four rule sets: required fields (name, description), publish-ready fields (author, license, repository), conditional fields (`compatibility` or `product-version` when products referenced, agents when agent-specific content), and format validation (semver, semver ranges in compatibility, SPDX, URLs). Auto-fix populates missing fields from git context. SPDX validation covers 100+ identifiers with OR/AND expressions.
 
 ### Policy (`packages/cli/src/policy/`)
 

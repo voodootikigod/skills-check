@@ -11,7 +11,7 @@ Given a SKILL.md file and information about a version update, produce an updated
 1. **Preserve structure and style**: Keep the same markdown formatting, heading hierarchy, frontmatter layout, and writing tone as the original.
 2. **Update code examples**: Modify code snippets to use new APIs, function signatures, or patterns introduced in the version update.
 3. **Update API references**: Fix any deprecated methods, renamed functions, or changed parameters.
-4. **Bump the frontmatter version**: Update the \`product-version\` field in the frontmatter to match the new version.
+4. **Update version references**: If the skill uses \`compatibility\`, update the relevant \`package@version\` entry. If it uses \`product-version\`, update that field. Prefer the \`compatibility\` field format: \`package@version\`.
 5. **Don't add speculative information**: Only include changes you can verify from the changelog. If the changelog is unavailable, make minimal updates (version bump + any commonly-known changes).
 6. **Don't remove content**: Don't delete sections unless the changelog explicitly indicates a feature was removed.
 7. **Mark confidence based on changelog quality**:

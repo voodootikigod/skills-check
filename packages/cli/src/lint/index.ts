@@ -1,4 +1,5 @@
 import { stat } from "node:fs/promises";
+import { extractVersionedPackages, parseCompatibility } from "../compatibility/index.js";
 import { extractWatermark, injectWatermarkIntoContent } from "../fingerprint/extractors/hashes.js";
 import { discoverSkillFiles } from "../shared/discovery.js";
 import { readSkillFile, writeSkillFile } from "../skill-io.js";
@@ -9,6 +10,26 @@ import { checkPublishReady } from "./rules/publish.js";
 import { checkRecommended } from "./rules/recommended.js";
 import { checkRequired } from "./rules/required.js";
 import type { LintFinding, LintOptions, LintReport } from "./types.js";
+
+/**
+ * Resolve the best version for watermarking from frontmatter fields.
+ * Precedence: version > first versioned compatibility entry > product-version > "0.0.0"
+ */
+function resolveWatermarkVersion(fm: Record<string, unknown>): string {
+	if (typeof fm.version === "string") {
+		return fm.version;
+	}
+	if (typeof fm.compatibility === "string") {
+		const versioned = extractVersionedPackages(parseCompatibility(fm.compatibility));
+		if (versioned.length > 0 && versioned[0].version) {
+			return versioned[0].version;
+		}
+	}
+	if (typeof fm["product-version"] === "string") {
+		return fm["product-version"];
+	}
+	return "0.0.0";
+}
 
 /**
  * Run the lint pipeline on skill files.
@@ -86,10 +107,7 @@ export async function runLint(paths: string[], options: LintOptions = {}): Promi
 				// Inject watermark if requested and missing
 				if (options.injectWatermarks && !extractWatermark(content)) {
 					const name = (skillFile.frontmatter.name as string) ?? "unknown";
-					const version =
-						(skillFile.frontmatter.version as string) ??
-						(skillFile.frontmatter["product-version"] as string) ??
-						"0.0.0";
+					const version = resolveWatermarkVersion(skillFile.frontmatter);
 					const source = skillFile.frontmatter.source as string | undefined;
 					const wmResult = injectWatermarkIntoContent(content, name, version, source);
 					if (wmResult.injected) {
@@ -113,10 +131,7 @@ export async function runLint(paths: string[], options: LintOptions = {}): Promi
 		// Inject watermark even without other fixes
 		if (options.fix && options.injectWatermarks && !extractWatermark(skillFile.raw)) {
 			const name = (skillFile.frontmatter.name as string) ?? "unknown";
-			const version =
-				(skillFile.frontmatter.version as string) ??
-				(skillFile.frontmatter["product-version"] as string) ??
-				"0.0.0";
+			const version = resolveWatermarkVersion(skillFile.frontmatter);
 			const source = skillFile.frontmatter.source as string | undefined;
 			const wmResult = injectWatermarkIntoContent(skillFile.raw, name, version, source);
 			if (wmResult.injected) {

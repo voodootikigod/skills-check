@@ -1,6 +1,7 @@
 import { stat } from "node:fs/promises";
 import type { FingerprintEntry, FingerprintRegistry } from "@skills-check/schema";
 import { countTokens } from "../budget/tokenizer.js";
+import { extractVersionedPackages, parseCompatibility } from "../compatibility/index.js";
 import { discoverSkillFiles } from "../shared/discovery.js";
 import { readSkillFile, writeSkillFile } from "../skill-io.js";
 import {
@@ -20,6 +21,26 @@ export interface FingerprintOptions {
 }
 
 /**
+ * Resolve the best version for fingerprinting from frontmatter fields.
+ * Precedence: version > first versioned compatibility entry > product-version > "0.0.0"
+ */
+function resolveFingerprintVersion(fm: Record<string, unknown>): string {
+	if (typeof fm.version === "string") {
+		return fm.version;
+	}
+	if (typeof fm.compatibility === "string") {
+		const versioned = extractVersionedPackages(parseCompatibility(fm.compatibility));
+		if (versioned.length > 0 && versioned[0].version) {
+			return versioned[0].version;
+		}
+	}
+	if (typeof fm["product-version"] === "string") {
+		return fm["product-version"];
+	}
+	return "0.0.0";
+}
+
+/**
  * Run the fingerprint pipeline on skill files.
  *
  * 1. Discover SKILL.md files
@@ -28,6 +49,7 @@ export interface FingerprintOptions {
  * 4. Optionally inject watermarks
  * 5. Return FingerprintRegistry
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: orchestrator function
 export async function runFingerprint(
 	paths: string[],
 	options: FingerprintOptions = {}
@@ -54,7 +76,7 @@ export async function runFingerprint(
 		const skillFile = await readSkillFile(filePath);
 		const fm = skillFile.frontmatter;
 		const name = (fm.name as string) ?? "unknown";
-		const version = (fm.version as string) ?? (fm["product-version"] as string) ?? "0.0.0";
+		const version = resolveFingerprintVersion(fm);
 		const source = fm.source as string | undefined;
 
 		// Extract raw frontmatter for hashing

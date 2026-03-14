@@ -1,6 +1,6 @@
 import type { AuditChecker, AuditFinding, CheckContext } from "../types.js";
 
-const REQUIRED_FIELDS = ["name", "description", "product-version"] as const;
+const REQUIRED_FIELDS = ["name", "description"] as const;
 const RECOMMENDED_FIELDS = ["version", "author"] as const;
 
 export const metadataChecker: AuditChecker = {

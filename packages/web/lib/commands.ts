@@ -24,13 +24,13 @@ export const commands: CommandInfo[] = [
 		tagline: "Detect version drift by comparing skill frontmatter against the npm registry.",
 		group: "Freshness & Currency",
 		description:
-			"Compare the product-version in your SKILL.md frontmatter against the latest version on npm. Instantly know which skills are stale and by how much.",
+			"Compare the compatibility (or product-version) in your SKILL.md frontmatter against the latest version on npm. Instantly know which skills are stale and by how much.",
 		whyItMatters:
 			"Agent skills that reference outdated APIs lead to hallucinated code, broken builds, and wasted developer time. A skill written for React 18 won't generate correct React 19 Server Component patterns. Version drift is the #1 source of skill quality decay.",
 		whatItDoes: [
 			"Reads your skills-check.json registry to map products to npm packages",
 			"Fetches the latest version from the npm registry for each product",
-			"Compares it against the product-version declared in each skill's frontmatter",
+			"Compares it against the compatibility (or product-version) declared in each skill's frontmatter",
 			"Reports stale products with the exact version gap (e.g. 4.2.0 → 4.5.1)",
 			"Exits with code 1 in CI mode when staleness is detected",
 		],
@@ -218,11 +218,11 @@ export const commands: CommandInfo[] = [
 		description:
 			"Enforce metadata standards across your skill fleet. Validates required frontmatter fields, checks SPDX license identifiers, verifies URLs, and can auto-fix missing fields from git context.",
 		whyItMatters:
-			"Incomplete metadata breaks downstream tooling. Without a name, skills-check can't track a skill. Without product-version, check can't detect drift. Without a license, legal compliance is impossible. Lint ensures every skill meets the bar before it ships.",
+			"Incomplete metadata breaks downstream tooling. Without a name, skills-check can't track a skill. Without compatibility (or product-version), check can't detect drift. Without a license, legal compliance is impossible. Lint ensures every skill meets the bar before it ships.",
 		whatItDoes: [
 			"Validates required fields: name, description (always required)",
 			"Checks publish-ready fields: author, license, repository",
-			"Validates conditional fields: product-version when products are referenced, agents when agent-specific",
+			"Validates conditional fields: compatibility or product-version when products are referenced, agents when agent-specific",
 			"Verifies format: semver syntax, SPDX license identifiers (100+ supported with OR/AND expressions), valid URLs",
 			"Auto-fix mode populates missing fields from git context (author from git config, repo from git remote)",
 		],
@@ -249,7 +249,7 @@ export const commands: CommandInfo[] = [
 			{ slug: "audit", relationship: "Validate format, then audit content" },
 		],
 		commonFindings: [
-			"Missing product-version — no version tracking possible",
+			"Missing compatibility/product-version — no version tracking possible",
 			"Invalid SPDX license — unrecognized license identifier",
 			"Missing author — skill has no attribution",
 		],

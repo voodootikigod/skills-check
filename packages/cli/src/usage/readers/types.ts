@@ -1,6 +1,6 @@
-import type { SkillTelemetryEvent } from "@skills-check/schema";
+import type { SkillTelemetryEvent as _SkillTelemetryEvent } from "@skills-check/schema";
 
-export type { SkillTelemetryEvent };
+export type SkillTelemetryEvent = _SkillTelemetryEvent;
 
 export interface TelemetryReaderOptions {
 	since?: Date;
@@ -8,6 +8,6 @@ export interface TelemetryReaderOptions {
 }
 
 export interface TelemetryReader {
-	read(options?: TelemetryReaderOptions): Promise<SkillTelemetryEvent[]>;
 	close(): Promise<void>;
+	read(options?: TelemetryReaderOptions): Promise<SkillTelemetryEvent[]>;
 }

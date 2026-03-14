@@ -1,6 +1,6 @@
 import type { TelemetryReader } from "./types.js";
 
-export type { TelemetryReader, TelemetryReaderOptions, SkillTelemetryEvent } from "./types.js";
+export type { SkillTelemetryEvent, TelemetryReader, TelemetryReaderOptions } from "./types.js";
 
 /**
  * Create a telemetry reader from a store URI.
@@ -24,6 +24,6 @@ export async function createReader(storeUri: string): Promise<TelemetryReader> {
 
 	throw new Error(
 		`Unsupported telemetry store URI scheme: "${storeUri}". ` +
-			"Supported: file://path/to/events.jsonl, sqlite:///path/to/db",
+			"Supported: file://path/to/events.jsonl, sqlite:///path/to/db"
 	);
 }

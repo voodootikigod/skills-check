@@ -155,10 +155,13 @@ Each SKILL.md file should include YAML frontmatter with the following fields:
 
 ### Recommended Fields
 
-- \`product-version\` — Semver version of the product this skill targets (e.g., "4.2.0"). Required for version drift detection via \`check\`.
+- \`compatibility\` — Spec-native field combining package name and version constraint (e.g., "ai@^4.2.0"). Self-describing and preferred for version drift detection via \`check\`.
+- \`product-version\` — (Deprecated fallback) Semver version of the product this skill targets (e.g., "4.2.0"). Use \`compatibility\` instead when possible.
 - \`author\` — Skill author name or organization
 - \`license\` — SPDX license identifier (e.g., "MIT", "Apache-2.0"). Supports OR/AND expressions.
 - \`repository\` — URL to the skill's source repository
+
+When both \`compatibility\` and \`product-version\` are present, \`compatibility\` takes precedence.
 
 ### Example
 
@@ -166,7 +169,7 @@ Each SKILL.md file should include YAML frontmatter with the following fields:
 ---
 name: ai-sdk-core
 description: Core patterns for the Vercel AI SDK
-product-version: "4.2.0"
+compatibility: "ai@^4.2.0"
 author: "Your Name"
 license: "MIT"
 repository: "https://github.com/your-org/skills"

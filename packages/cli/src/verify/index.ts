@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import matter from "gray-matter";
 import { major, minor, patch } from "semver";
+import { extractVersionedPackages, parseCompatibility } from "../compatibility/index.js";
 import { normalizeVersion } from "../severity.js";
 import { discoverSkillFiles } from "../shared/discovery.js";
 import { readSkillFile } from "../skill-io.js";
@@ -54,6 +55,23 @@ function buildExplanation(result: Omit<VerifyResult, "explanation">): string {
 	return `The declared ${result.declaredBump} bump appears excessive. Changes suggest only a ${result.assessedBump} bump.`;
 }
 
+/**
+ * Resolve the tracked version from parsed frontmatter.
+ * Precedence: compatibility (first versioned entry) > product-version
+ */
+function resolveVersion(parsed: matter.GrayMatterFile<string>): string | null {
+	if (typeof parsed.data.compatibility === "string") {
+		const versioned = extractVersionedPackages(parseCompatibility(parsed.data.compatibility));
+		if (versioned.length > 0 && versioned[0].version) {
+			return versioned[0].version;
+		}
+	}
+	if (parsed.data["product-version"] != null) {
+		return String(parsed.data["product-version"]);
+	}
+	return null;
+}
+
 async function verifyPair(
 	beforeContent: string,
 	afterContent: string,
@@ -71,8 +89,8 @@ async function verifyPair(
 			.pop() ||
 		"unknown";
 
-	const declaredBefore = (beforeParsed.data["product-version"] as string) ?? null;
-	const declaredAfter = (afterParsed.data["product-version"] as string) ?? null;
+	const declaredBefore = resolveVersion(beforeParsed);
+	const declaredAfter = resolveVersion(afterParsed);
 
 	const declaredBump =
 		declaredBefore && declaredAfter
@@ -160,6 +178,7 @@ export async function runVerify(options: VerifyOptions): Promise<VerifyReport> {
 
 			if (!previousContent) {
 				// New file, no previous version — skip with a note
+				const parsed = matter(skillFile.raw);
 				results.push({
 					skill:
 						(skillFile.frontmatter.name as string) ||
@@ -170,7 +189,7 @@ export async function runVerify(options: VerifyOptions): Promise<VerifyReport> {
 						"unknown",
 					file: filePath,
 					declaredBefore: null,
-					declaredAfter: (skillFile.frontmatter["product-version"] as string) ?? null,
+					declaredAfter: resolveVersion(parsed),
 					declaredBump: null,
 					assessedBump: "patch",
 					match: false,

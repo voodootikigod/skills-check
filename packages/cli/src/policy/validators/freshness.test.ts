@@ -3,6 +3,8 @@ import type { SkillFile } from "../../skill-io.js";
 import type { SkillPolicy } from "../types.js";
 import { checkFreshness } from "./freshness.js";
 
+const DAYS_AGO_RE = /\d+ days ago/;
+
 function makeSkillFile(frontmatter: Record<string, unknown>, content?: string): SkillFile {
 	const c = content ?? "# Test\n";
 	return {
@@ -32,7 +34,7 @@ describe("checkFreshness", () => {
 		const findings = checkFreshness(file, policy);
 		expect(findings).toHaveLength(1);
 		expect(findings[0].severity).toBe("warning");
-		expect(findings[0].message).toContain("100");
+		expect(findings[0].message).toMatch(DAYS_AGO_RE);
 		expect(findings[0].message).toContain("max: 90");
 	});
 
@@ -61,7 +63,7 @@ describe("checkFreshness", () => {
 		expect(findings[0].message).toContain("No last-verified date");
 	});
 
-	it("flags product-referencing skill without product-version", () => {
+	it("flags product-referencing skill without version tracking", () => {
 		const content = "# AI SDK\n\nUse `npm install ai` to install AI SDK 4.0.\n";
 		const file = makeSkillFile({}, content);
 		const policy: SkillPolicy = {
@@ -82,6 +84,40 @@ describe("checkFreshness", () => {
 		};
 		const findings = checkFreshness(file, policy);
 		expect(findings).toEqual([]);
+	});
+
+	it("does not flag skill with versioned compatibility set", () => {
+		const content = "# AI SDK\n\nUse `npm install ai` to install AI SDK 4.0.\n";
+		const file = makeSkillFile({ compatibility: "ai@4.0.0" }, content);
+		const policy: SkillPolicy = {
+			version: 1,
+			freshness: { require_product_version: true },
+		};
+		const findings = checkFreshness(file, policy);
+		expect(findings).toEqual([]);
+	});
+
+	it("flags skill with only non-versioned compatibility", () => {
+		const content = "# AI SDK\n\nUse `npm install ai` to install AI SDK 4.0.\n";
+		const file = makeSkillFile({ compatibility: "docker, network" }, content);
+		const policy: SkillPolicy = {
+			version: 1,
+			freshness: { require_product_version: true },
+		};
+		const findings = checkFreshness(file, policy);
+		expect(findings).toHaveLength(1);
+	});
+
+	it("supports require_version_tracking as alias for require_product_version", () => {
+		const content = "# AI SDK\n\nUse `npm install ai` to install AI SDK 4.0.\n";
+		const file = makeSkillFile({}, content);
+		const policy: SkillPolicy = {
+			version: 1,
+			freshness: { require_version_tracking: true },
+		};
+		const findings = checkFreshness(file, policy);
+		expect(findings).toHaveLength(1);
+		expect(findings[0].rule).toBe("freshness.require_product_version");
 	});
 
 	it("does not flag non-product skill without product-version", () => {

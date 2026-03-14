@@ -16,13 +16,27 @@ export interface CheckResult {
 }
 
 /**
+ * A parsed entry from the `compatibility` frontmatter field.
+ */
+export interface CompatibilityEntry {
+	package: string;
+	raw: string; // original text fragment
+	version?: string; // semver or range
+}
+
+/**
  * Scanned skill from SKILL.md frontmatter
  */
 export interface ScannedSkill {
+	allowedTools?: string;
+	compatibility?: string;
+	compatibilityEntries?: CompatibilityEntry[];
 	name: string;
 	path: string;
 	product?: string;
+	/** @deprecated Use `resolvedPackages` from compatibility field instead */
 	productVersion?: string;
+	resolvedPackages?: CompatibilityEntry[];
 }
 
 /**

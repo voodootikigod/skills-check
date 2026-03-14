@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SkillTelemetryEvent } from "@skills-check/schema";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./readers/index.js", () => ({
 	createReader: vi.fn(),
@@ -80,7 +80,7 @@ describe("runUsage", () => {
 			expect.objectContaining({
 				since: expect.any(Date),
 				until: expect.any(Date),
-			}),
+			})
 		);
 	});
 

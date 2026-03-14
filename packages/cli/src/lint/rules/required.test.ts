@@ -38,15 +38,25 @@ describe("checkRequired", () => {
 		expect(findings[0].field).toBe("name");
 	});
 
-	it("reports name exceeding max length", () => {
+	it("reports name exceeding max length of 64 chars", () => {
 		const file = makeFile({
-			name: "a".repeat(101),
-			description: "A useful skill for testing purposes and more.",
+			name: "a".repeat(65),
+			description: "A useful skill.",
 		});
 		const findings = checkRequired(file);
 		expect(findings).toHaveLength(1);
 		expect(findings[0].field).toBe("name");
 		expect(findings[0].message).toContain("exceeds maximum length");
+		expect(findings[0].message).toContain("64");
+	});
+
+	it("accepts name at exactly 64 chars", () => {
+		const file = makeFile({
+			name: "a".repeat(64),
+			description: "A useful skill.",
+		});
+		const findings = checkRequired(file);
+		expect(findings.filter((f) => f.field === "name")).toHaveLength(0);
 	});
 
 	it("reports non-string name", () => {
@@ -67,20 +77,25 @@ describe("checkRequired", () => {
 		expect(findings[0].level).toBe("error");
 	});
 
-	it("reports description too short", () => {
+	it("accepts short descriptions (spec allows 1+ chars)", () => {
 		const file = makeFile({ name: "my-skill", description: "Short" });
 		const findings = checkRequired(file);
-		expect(findings).toHaveLength(1);
-		expect(findings[0].field).toBe("description");
-		expect(findings[0].message).toContain("too short");
+		expect(findings.filter((f) => f.field === "description")).toHaveLength(0);
 	});
 
-	it("reports description too long", () => {
-		const file = makeFile({ name: "my-skill", description: "x".repeat(501) });
+	it("reports description exceeding 1024 chars", () => {
+		const file = makeFile({ name: "my-skill", description: "x".repeat(1025) });
 		const findings = checkRequired(file);
 		expect(findings).toHaveLength(1);
 		expect(findings[0].field).toBe("description");
 		expect(findings[0].message).toContain("exceeds maximum length");
+		expect(findings[0].message).toContain("1024");
+	});
+
+	it("accepts description at exactly 1024 chars", () => {
+		const file = makeFile({ name: "my-skill", description: "x".repeat(1024) });
+		const findings = checkRequired(file);
+		expect(findings.filter((f) => f.field === "description")).toHaveLength(0);
 	});
 
 	it("reports both missing name and description", () => {

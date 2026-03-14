@@ -166,8 +166,8 @@ export default function ReferencePage() {
       "file": "SKILL.md",
       "rule": "required-field",
       "severity": "error",
-      "field": "product-version",
-      "message": "Missing required field: product-version"
+      "field": "compatibility",
+      "message": "Missing required field: compatibility (or product-version)"
     }
   ]
 }`}

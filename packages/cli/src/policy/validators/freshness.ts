@@ -1,3 +1,4 @@
+import { extractVersionedPackages, parseCompatibility } from "../../compatibility/index.js";
 import { detectsProduct } from "../../lint/detection/product-refs.js";
 import type { SkillFile } from "../../skill-io.js";
 import type { PolicyFinding, SkillPolicy } from "../types.js";
@@ -41,14 +42,21 @@ export function checkFreshness(file: SkillFile, policy: SkillPolicy): PolicyFind
 		}
 	}
 
-	// Check require_product_version
-	if (policy.freshness.require_product_version) {
+	// Check require_product_version or require_version_tracking
+	const requireVersionTracking =
+		policy.freshness.require_version_tracking ?? policy.freshness.require_product_version;
+
+	if (requireVersionTracking) {
 		const hasProductVersion =
 			fm["product-version"] !== undefined &&
 			fm["product-version"] !== null &&
 			fm["product-version"] !== "";
 
-		if (!hasProductVersion) {
+		const hasVersionedCompatibility =
+			typeof fm.compatibility === "string" &&
+			extractVersionedPackages(parseCompatibility(fm.compatibility)).length > 0;
+
+		if (!(hasProductVersion || hasVersionedCompatibility)) {
 			// Only flag if the skill references a product
 			const refsProduct = detectsProduct(file.content);
 			if (refsProduct) {
@@ -56,7 +64,8 @@ export function checkFreshness(file: SkillFile, policy: SkillPolicy): PolicyFind
 					file: file.path,
 					severity: "violation",
 					rule: "freshness.require_product_version",
-					message: "Skill references a product but does not declare product-version",
+					message:
+						"Skill references a product but does not declare version tracking (compatibility or product-version)",
 				});
 			}
 		}

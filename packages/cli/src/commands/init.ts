@@ -62,6 +62,14 @@ function autoDetect(productKey: string): { displayName: string; package: string 
 }
 
 /**
+ * Get the version string for a group of skills.
+ * Uses resolvedPackages (which handles the compatibility > product-version precedence).
+ */
+function getGroupVersion(groupSkillsList: Array<{ productVersion?: string }>): string {
+	return groupSkillsList[0]?.productVersion ?? "unknown";
+}
+
+/**
  * Initialize a skills-check.json registry by scanning a skills directory.
  */
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: orchestrator function
@@ -83,13 +91,13 @@ export async function initCommand(dir: string, options: InitOptions): Promise<nu
 	const withoutVersion = skills.filter((s) => !s.productVersion);
 
 	console.log(
-		`Found ${chalk.bold(String(skills.length))} skills, ${chalk.bold(String(withVersion.length))} with product-version.`
+		`Found ${chalk.bold(String(skills.length))} skills, ${chalk.bold(String(withVersion.length))} with version tracking.`
 	);
 
 	if (withoutVersion.length > 0) {
 		console.log(
 			chalk.dim(
-				`  Skipping ${withoutVersion.length} without product-version: ${withoutVersion.map((s) => s.name).join(", ")}`
+				`  Skipping ${withoutVersion.length} without version tracking: ${withoutVersion.map((s) => s.name).join(", ")}`
 			)
 		);
 	}
@@ -108,7 +116,7 @@ export async function initCommand(dir: string, options: InitOptions): Promise<nu
 		// Non-interactive: auto-detect mappings
 		for (const [productKey, groupSkillsList] of versionGroups) {
 			const detected = autoDetect(productKey);
-			const version = groupSkillsList[0]?.productVersion ?? "unknown";
+			const version = getGroupVersion(groupSkillsList);
 
 			if (!detected) {
 				console.log(
@@ -152,7 +160,7 @@ export async function initCommand(dir: string, options: InitOptions): Promise<nu
 		try {
 			for (const [productKey, groupSkillsList] of versionGroups) {
 				const detected = autoDetect(productKey);
-				const version = groupSkillsList[0]?.productVersion ?? "unknown";
+				const version = getGroupVersion(groupSkillsList);
 				const defaultPkg = detected?.package;
 				const defaultName = detected?.displayName ?? productKey;
 				const hint = defaultPkg ? ` [${defaultPkg}]` : "";

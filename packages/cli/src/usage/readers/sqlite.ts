@@ -6,11 +6,18 @@ import type { SkillTelemetryEvent, TelemetryReader, TelemetryReaderOptions } fro
  */
 export class SQLiteReader implements TelemetryReader {
 	private db: unknown = null;
+	private readonly dbPath: string;
 
-	constructor(private dbPath: string) {}
+	constructor(dbPath: string) {
+		this.dbPath = dbPath;
+	}
 
-	private async getDb(): Promise<{ prepare: (sql: string) => { all: (...args: unknown[]) => unknown[] } }> {
-		if (this.db) return this.db as never;
+	private async getDb(): Promise<{
+		prepare: (sql: string) => { all: (...args: unknown[]) => unknown[] };
+	}> {
+		if (this.db) {
+			return this.db as never;
+		}
 		try {
 			const { DatabaseSync } = await import("node:sqlite");
 			this.db = new DatabaseSync(this.dbPath, { readOnly: true });
@@ -18,7 +25,7 @@ export class SQLiteReader implements TelemetryReader {
 		} catch {
 			throw new Error(
 				"SQLite reader requires Node.js 22+ with built-in sqlite module. " +
-					"Use a JSONL telemetry store instead, or upgrade Node.js.",
+					"Use a JSONL telemetry store instead, or upgrade Node.js."
 			);
 		}
 	}
@@ -41,7 +48,7 @@ export class SQLiteReader implements TelemetryReader {
 		sql += " ORDER BY timestamp DESC";
 
 		const stmt = db.prepare(sql);
-		const rows = stmt.all(...params) as Array<Record<string, unknown>>;
+		const rows = stmt.all(...params) as Record<string, unknown>[];
 
 		return rows.map((row) => ({
 			schema_version: 1 as const,
@@ -59,16 +66,18 @@ export class SQLiteReader implements TelemetryReader {
 				skill_tokens: row.skill_tokens as number,
 				total_prompt_tokens: (row.total_prompt_tokens as number) || undefined,
 			},
-			org: row.org_user || row.org_team || row.org_project
-				? {
-						user: (row.org_user as string) || undefined,
-						team: (row.org_team as string) || undefined,
-						project: (row.org_project as string) || undefined,
-					}
-				: undefined,
+			org:
+				row.org_user || row.org_team || row.org_project
+					? {
+							user: (row.org_user as string) || undefined,
+							team: (row.org_team as string) || undefined,
+							project: (row.org_project as string) || undefined,
+						}
+					: undefined,
 		}));
 	}
 
+	// biome-ignore lint/suspicious/useAwait: interface contract requires async
 	async close(): Promise<void> {
 		if (this.db) {
 			(this.db as { close: () => void }).close();

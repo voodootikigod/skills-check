@@ -56,7 +56,7 @@ content:
 freshness:
   max_age_days: 90
   # max_version_drift: minor
-  require_product_version: false
+  require_version_tracking: false
 
 # Audit integration
 audit:

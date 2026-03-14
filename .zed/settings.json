@@ -1,0 +1,25 @@
+{
+  "tab_size": 4,
+  "hard_tabs": true,
+  "format_on_save": "on",
+  "formatter": "language_server",
+  "preferred_line_length": 100,
+  "ensure_final_newline_on_save": true,
+  "remove_trailing_whitespace_on_save": true,
+  "languages": {
+    "TypeScript": {
+      "hard_tabs": true,
+      "tab_size": 4,
+      "formatter": "language_server"
+    },
+    "JavaScript": {
+      "hard_tabs": true,
+      "tab_size": 4,
+      "formatter": "language_server"
+    },
+    "JSON": {
+      "hard_tabs": false,
+      "tab_size": 2
+    }
+  }
+}

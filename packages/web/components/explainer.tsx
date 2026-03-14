@@ -52,9 +52,9 @@ export function Explainer() {
 							<span className={styles.yamlDelimiter}>: </span>
 							<span className={styles.yamlValue}>1.2.0</span>
 							{"\n"}
-							<span className={styles.yamlKey}>product-version</span>
+							<span className={styles.yamlKey}>compatibility</span>
 							<span className={styles.yamlDelimiter}>: </span>
-							<span className={styles.yamlValue}>&quot;19.1&quot;</span>
+							<span className={styles.yamlValue}>&quot;react@^19.1.0&quot;</span>
 							{"\n"}
 							<span className={styles.yamlKey}>author</span>
 							<span className={styles.yamlDelimiter}>: </span>
