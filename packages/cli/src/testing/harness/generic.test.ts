@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
-// Mock child_process.exec
+// Mock child_process.execFile
 vi.mock("node:child_process", () => ({
-	exec: vi.fn((_cmd, opts, cb) => {
+	execFile: vi.fn((_cmd, _args, opts, cb) => {
 		if (typeof opts === "function") {
 			opts(null, "generic output", "");
 		} else if (typeof cb === "function") {
@@ -22,7 +22,34 @@ vi.mock("node:fs/promises", async () => {
 	};
 });
 
-import { GenericHarness } from "./generic.js";
+import { execFile } from "node:child_process";
+import { GenericHarness, parseCommandTemplate } from "./generic.js";
+
+const mockedExecFile = vi.mocked(execFile);
+
+describe("parseCommandTemplate", () => {
+	it("parses simple command", () => {
+		const result = parseCommandTemplate("echo {prompt}");
+		expect(result.cmd).toBe("echo");
+		expect(result.argTemplate).toEqual(["{prompt}"]);
+	});
+
+	it("parses command with multiple args", () => {
+		const result = parseCommandTemplate("my-agent --prompt {prompt} --verbose");
+		expect(result.cmd).toBe("my-agent");
+		expect(result.argTemplate).toEqual(["--prompt", "{prompt}", "--verbose"]);
+	});
+
+	it("throws on empty template", () => {
+		expect(() => parseCommandTemplate("")).toThrow("Command template must not be empty");
+	});
+
+	it("handles extra whitespace", () => {
+		const result = parseCommandTemplate("  echo   {prompt}  ");
+		expect(result.cmd).toBe("echo");
+		expect(result.argTemplate).toEqual(["{prompt}"]);
+	});
+});
 
 describe("GenericHarness", () => {
 	it("has correct name", () => {
@@ -35,9 +62,8 @@ describe("GenericHarness", () => {
 		expect(await harness.available()).toBe(true);
 	});
 
-	it("uses default command template", async () => {
-		const { exec } = await import("node:child_process");
-		const mockedExec = vi.mocked(exec);
+	it("uses default command template with execFile", async () => {
+		mockedExecFile.mockClear();
 
 		const harness = new GenericHarness();
 		await harness.execute("Hello world", {
@@ -45,24 +71,26 @@ describe("GenericHarness", () => {
 			timeout: 30,
 		});
 
-		const calledCommand = mockedExec.mock.calls[0][0] as string;
-		expect(calledCommand).toContain("Hello world");
+		// execFile should be called with cmd and args array, not a shell string
+		const calledCmd = mockedExecFile.mock.calls[0][0] as string;
+		const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+		expect(calledCmd).toBe("echo");
+		expect(calledArgs).toEqual(["Hello world"]);
 	});
 
 	it("uses custom command template", async () => {
-		const { exec } = await import("node:child_process");
-		const mockedExec = vi.mocked(exec);
-		mockedExec.mockClear();
+		mockedExecFile.mockClear();
 
-		const harness = new GenericHarness('codex exec "{prompt}"');
+		const harness = new GenericHarness("codex exec --prompt {prompt}");
 		await harness.execute("Create a file", {
 			workDir: "/tmp/test",
 			timeout: 30,
 		});
 
-		const calledCommand = mockedExec.mock.calls[0][0] as string;
-		expect(calledCommand).toContain("codex exec");
-		expect(calledCommand).toContain("Create a file");
+		const calledCmd = mockedExecFile.mock.calls[0][0] as string;
+		const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+		expect(calledCmd).toBe("codex");
+		expect(calledArgs).toEqual(["exec", "--prompt", "Create a file"]);
 	});
 
 	it("returns execution result", async () => {
@@ -75,5 +103,113 @@ describe("GenericHarness", () => {
 		expect(result.exitCode).toBe(0);
 		expect(result.transcript).toBe("generic output");
 		expect(result.duration).toBeGreaterThanOrEqual(0);
+	});
+
+	it("sets SKILLS_CHECK_PROMPT environment variable", async () => {
+		mockedExecFile.mockClear();
+
+		const harness = new GenericHarness();
+		await harness.execute("my prompt value", {
+			workDir: "/tmp/test",
+			timeout: 30,
+		});
+
+		const calledOpts = mockedExecFile.mock.calls[0][2] as { env?: Record<string, string> };
+		expect(calledOpts.env?.SKILLS_CHECK_PROMPT).toBe("my prompt value");
+	});
+
+	describe("command injection safety", () => {
+		it("does not execute shell metacharacters via $(...)", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("$(rm -rf /)", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			// The prompt is passed as a direct argument, not shell-interpolated
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["$(rm -rf /)"]);
+			// execFile does NOT pass through a shell, so this is a literal string
+		});
+
+		it("does not execute backtick injection", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("`whoami`", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["`whoami`"]);
+		});
+
+		it("does not execute semicolon injection", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("hello; rm -rf /", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["hello; rm -rf /"]);
+		});
+
+		it("does not execute pipe injection", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("hello | cat /etc/passwd", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["hello | cat /etc/passwd"]);
+		});
+
+		it("does not execute && injection", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("hello && curl evil.com", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["hello && curl evil.com"]);
+		});
+
+		it("handles prompt with single quotes safely", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("it's a test", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["it's a test"]);
+		});
+
+		it("handles prompt with double quotes safely", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute('say "hello"', {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(['say "hello"']);
+		});
 	});
 });
