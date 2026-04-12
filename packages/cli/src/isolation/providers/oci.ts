@@ -114,7 +114,6 @@ export class OCIProvider implements IsolationProvider {
 	}
 
 	async execute(options: IsolationExecuteOptions): Promise<IsolationResult> {
-		const escapedCommand = shellEscape(options.command);
 		const args = ["run", "--rm"];
 
 		// Mount skills directory read-only
@@ -123,6 +122,11 @@ export class OCIProvider implements IsolationProvider {
 		// Mount writable work directory if provided
 		if (options.workDir) {
 			args.push("-v", `${options.workDir}:/work`);
+		}
+
+		// Mount local build read-only if provided
+		if (options.localBuild) {
+			args.push("-v", `${options.localBuild}:/app:ro`);
 		}
 
 		// Network policy
@@ -137,13 +141,30 @@ export class OCIProvider implements IsolationProvider {
 			}
 		}
 
-		// Use a slim Node 22 image
-		args.push("node:22-alpine");
-		args.push(
-			"sh",
-			"-c",
-			`cd /skills && npm install -g skills-check && npx skills-check ${escapedCommand}`
-		);
+		if (options.argv && options.localBuild) {
+			// Preferred path: use structured argv with local build (no shell, no npm install)
+			args.push("--entrypoint", "node");
+			args.push("node:22-alpine");
+			args.push("/app/dist/index.js", ...options.argv);
+		} else if (options.argv) {
+			// Structured argv without local build: still need npm install, but use argv for command
+			const escapedCommand = shellEscape(options.argv.join(" "));
+			args.push("node:22-alpine");
+			args.push(
+				"sh",
+				"-c",
+				`cd /skills && npm install -g skills-check && npx skills-check ${escapedCommand}`
+			);
+		} else {
+			// Legacy path: use command string
+			const escapedCommand = shellEscape(options.command);
+			args.push("node:22-alpine");
+			args.push(
+				"sh",
+				"-c",
+				`cd /skills && npm install -g skills-check && npx skills-check ${escapedCommand}`
+			);
+		}
 
 		const result = await new Promise<{ exitCode: number; stdout: string; stderr: string }>(
 			(resolve) => {

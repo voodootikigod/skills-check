@@ -32,10 +32,14 @@ export const OCI_PROVIDER_NAMES = new Set<IsolationProviderName>([
 ]);
 
 export interface IsolationExecuteOptions {
+	/** Structured argument array (preferred over command string) */
+	argv?: string[];
 	/** The full skills-check CLI command (e.g. "audit ./skills --format json") */
 	command: string;
 	/** Environment variables to forward (API keys, etc.) */
 	env?: Record<string, string>;
+	/** Path to local skills-check build to mount into container */
+	localBuild?: string;
 	/** Whether the command needs outbound network access */
 	networkAccess: boolean;
 	/** Directory containing skill files — mounted read-only into the container */
