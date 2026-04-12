@@ -20,3 +20,4 @@ packages/web/tsconfig.tsbuildinfo
 
 # Beads local state (task tracker runtime)
 .beads/
+.worktrees/
