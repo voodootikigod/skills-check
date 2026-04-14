@@ -25,7 +25,6 @@ export class AppleContainerProvider implements IsolationProvider {
 	}
 
 	async execute(options: IsolationExecuteOptions): Promise<IsolationResult> {
-		const fullCommand = `npx skills-check ${options.command}`;
 		const args = [
 			"run",
 			"--name",
@@ -36,6 +35,11 @@ export class AppleContainerProvider implements IsolationProvider {
 
 		if (options.workDir) {
 			args.push("--mount", `type=bind,source=${options.workDir},target=/work`);
+		}
+
+		// Mount local build read-only if provided
+		if (options.localBuild) {
+			args.push("--mount", `type=bind,source=${options.localBuild},target=/app,readonly`);
 		}
 
 		if (!options.networkAccess) {
@@ -49,7 +53,14 @@ export class AppleContainerProvider implements IsolationProvider {
 			}
 		}
 
-		args.push("--", "sh", "-c", `cd /skills && ${fullCommand}`);
+		if (options.argv && options.localBuild) {
+			// Preferred: structured argv with local build — no shell, no npm install
+			args.push("--", "node", "/app/dist/index.js", ...options.argv);
+		} else {
+			// Legacy: shell-based execution
+			const fullCommand = `npx skills-check ${options.command}`;
+			args.push("--", "sh", "-c", `cd /skills && ${fullCommand}`);
+		}
 
 		const result = await new Promise<{ exitCode: number; stdout: string; stderr: string }>(
 			(resolve) => {

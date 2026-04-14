@@ -36,15 +36,41 @@ async function listFilesRecursive(dir: string): Promise<Set<string>> {
 	return files;
 }
 
-const WHITESPACE_RE = /\s+/;
-
 /**
  * Parse a command template string into an executable and argument template array.
- * The template is split on whitespace; `{prompt}` tokens in the args are replaced
- * at execution time with the actual prompt value — never shell-interpolated.
+ * Handles quoted segments (single and double quotes) so paths with spaces work.
+ * `{prompt}` tokens in the args are replaced at execution time with the actual
+ * prompt value — never shell-interpolated.
  */
 export function parseCommandTemplate(template: string): { cmd: string; argTemplate: string[] } {
-	const parts = template.split(WHITESPACE_RE).filter(Boolean);
+	const parts: string[] = [];
+	let current = "";
+	let inQuote: string | null = null;
+
+	for (let i = 0; i < template.length; i++) {
+		const ch = template[i];
+
+		if (inQuote) {
+			if (ch === inQuote) {
+				inQuote = null;
+			} else {
+				current += ch;
+			}
+		} else if (ch === '"' || ch === "'") {
+			inQuote = ch;
+		} else if (ch === " " || ch === "\t") {
+			if (current.length > 0) {
+				parts.push(current);
+				current = "";
+			}
+		} else {
+			current += ch;
+		}
+	}
+	if (current.length > 0) {
+		parts.push(current);
+	}
+
 	if (parts.length === 0) {
 		throw new Error("Command template must not be empty");
 	}

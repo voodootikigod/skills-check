@@ -34,8 +34,6 @@ export class VercelSandboxProvider implements IsolationProvider {
 	}
 
 	async execute(options: IsolationExecuteOptions): Promise<IsolationResult> {
-		const fullCommand = `npx skills-check ${options.command}`;
-
 		// Build env flags for the sandbox
 		const envFlags: string[] = [];
 		if (options.env) {
@@ -45,6 +43,16 @@ export class VercelSandboxProvider implements IsolationProvider {
 		}
 
 		// Use Vercel's sandbox execution API via the CLI
+		let execArgs: string[];
+		if (options.argv && options.localBuild) {
+			// Preferred: structured argv with local build — no shell
+			execArgs = ["node", "/app/dist/index.js", ...options.argv];
+		} else {
+			// Legacy: shell-based execution
+			const fullCommand = `npx skills-check ${options.command}`;
+			execArgs = ["sh", "-c", fullCommand];
+		}
+
 		const args = [
 			"sandbox",
 			"exec",
@@ -52,9 +60,7 @@ export class VercelSandboxProvider implements IsolationProvider {
 			"--timeout",
 			String(options.timeout * 1000),
 			"--",
-			"sh",
-			"-c",
-			fullCommand,
+			...execArgs,
 		];
 
 		const result = await new Promise<{ exitCode: number; stdout: string; stderr: string }>(
