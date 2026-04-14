@@ -194,7 +194,7 @@ npx skills-check audit --format json
 npx skills-check audit --format sarif
 
 # Fail on specific severity
-npx skills-check audit --fail-on warning --ci`}
+npx skills-check audit --fail-on medium --ci`}
 							</code>
 						</pre>
 
@@ -1139,6 +1139,59 @@ jobs:
 							<Link href="/reference">programmatic reference</Link> documents exit codes, JSON
 							output schemas for every command, practical <code>jq</code> scripting examples, and
 							SARIF integration for the GitHub Security tab.
+						</p>
+					</section>
+
+					<section>
+						<h2 id="trust-boundary">Trust Boundary Guide</h2>
+						<p>
+							Not all commands carry the same risk profile. Understanding which commands are
+							local-only versus which make network requests or execute external code helps you
+							configure CI permissions and sandboxing appropriately.
+						</p>
+
+						<h3>Local-only and deterministic</h3>
+						<p>
+							These commands operate entirely on local files with no network access or code
+							execution: <code>init</code>, <code>lint</code>, <code>budget</code>,{" "}
+							<code>verify</code>, <code>fingerprint</code>, <code>policy</code>.
+						</p>
+
+						<h3>Network requests</h3>
+						<p>These commands make outbound HTTP requests to external services:</p>
+						<ul>
+							<li>
+								<code>check</code> and <code>report</code> — queries the npm registry for latest
+								package versions
+							</li>
+							<li>
+								<code>audit</code> — queries npm, PyPI, and crates.io package registries; performs
+								HEAD requests to verify URL liveness
+							</li>
+							<li>
+								<code>refresh</code> — calls LLM provider APIs (Anthropic, OpenAI, Google) to
+								generate skill updates
+							</li>
+							<li>
+								<code>usage</code> — reads from telemetry stores which may be remote (SQLite or
+								JSONL)
+							</li>
+						</ul>
+
+						<h3>LLM-assisted</h3>
+						<p>
+							These commands send skill content to LLM APIs when an API key is configured:{" "}
+							<code>refresh</code>, <code>verify</code> (with heuristic fallback when no key is
+							set), and <code>test</code> (the <code>llm-rubric</code> grader). All LLM-assisted
+							features degrade gracefully without API keys.
+						</p>
+
+						<h3>External code execution</h3>
+						<p>
+							The <code>test</code> command executes shell commands through agent harnesses (Claude
+							Code CLI or a generic shell). Test cases can run arbitrary commands defined in{" "}
+							<code>cases.yaml</code>. Use <code>--isolation</code> when running tests against
+							untrusted skills to sandbox execution in a container.
 						</p>
 					</section>
 				</article>

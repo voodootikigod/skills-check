@@ -764,6 +764,23 @@ For simpler setups, run individual commands directly:
   run: npx skills-check usage --store file://telemetry.jsonl --check-policy --ci
 ```
 
+## Trust Boundary Guide
+
+Not all commands carry the same risk profile. Understanding which commands are local-only versus which make network requests or execute external code helps you configure CI permissions and sandboxing appropriately.
+
+**Local-only and deterministic:** `init`, `lint`, `budget`, `verify`, `fingerprint`, `policy` — operate entirely on local files with no network access or code execution.
+
+**Network requests:**
+
+- `check` and `report` — query the npm registry for latest package versions
+- `audit` — queries npm, PyPI, and crates.io package registries; performs HEAD requests to verify URL liveness
+- `refresh` — calls LLM provider APIs (Anthropic, OpenAI, Google) to generate skill updates
+- `usage` — reads from telemetry stores which may be remote (SQLite or JSONL)
+
+**LLM-assisted:** `refresh`, `verify` (with heuristic fallback when no key is set), and `test` (the `llm-rubric` grader). All LLM-assisted features degrade gracefully without API keys.
+
+**External code execution:** The `test` command executes shell commands through agent harnesses (Claude Code CLI or a generic shell). Test cases can run arbitrary commands defined in `cases.yaml`. Use `--isolation` when running tests against untrusted skills to sandbox execution in a container.
+
 ## Complementary Tools
 
 - [`npx skills`](https://skills.sh) -- registry + installer for Agent Skills
