@@ -302,6 +302,7 @@ program
 		"run in isolated environment: auto, oci, apple, docker, podman, orbstack, rancher, nerdctl, vercel, local"
 	)
 	.option("--no-isolation", "force local execution (skip isolation detection)")
+	.option("--allow-unsafe-local", "allow CI to run without isolation (unsafe)")
 	.action(async (dir, options) => {
 		try {
 			const code = await testCommand(dir, options);

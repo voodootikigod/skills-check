@@ -23,6 +23,7 @@ function getLocalBuildPath(): string {
 interface TestCommandOptions {
 	agent?: string;
 	agentCmd?: string;
+	allowUnsafeLocal?: boolean;
 	ci?: boolean;
 	dry?: boolean;
 	format?: "terminal" | "json" | "markdown" | "sarif";
@@ -101,9 +102,17 @@ export async function testCommand(dir: string, options: TestCommandOptions): Pro
 				)
 			);
 
-			// In CI mode, proceed with a warning (CI has its own sandboxing)
-			// In interactive mode, require --no-isolation to explicitly accept the risk
-			if (!options.ci) {
+			if (options.ci || process.env.CI) {
+				// In CI: fail closed unless explicitly overridden
+				if (!options.allowUnsafeLocal) {
+					console.error(
+						chalk.red("  CI mode requires isolation. Pass --allow-unsafe-local to override.\n")
+					);
+					return 2;
+				}
+				console.error(chalk.yellow("  --allow-unsafe-local: running without isolation in CI.\n"));
+			} else {
+				// Interactive: require --no-isolation
 				console.error(
 					chalk.yellow(
 						"  To proceed without isolation, re-run with --no-isolation to accept the risk.\n"
@@ -111,7 +120,6 @@ export async function testCommand(dir: string, options: TestCommandOptions): Pro
 				);
 				return 2;
 			}
-			console.error(chalk.dim("  Continuing in CI mode without isolation.\n"));
 		}
 
 		if (provider.name !== "local") {
