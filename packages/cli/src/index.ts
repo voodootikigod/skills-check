@@ -96,6 +96,7 @@ program
 	)
 	.option("--include-registry-audits", "fetch Snyk/Socket/Gen results from skills.sh")
 	.option("--ignore <path>", "path to .skills-checkignore file")
+	.option("--check-revocations <path>", "path to .skill-revocations.json file")
 	.option("--verbose", "show progress and scan details")
 	.option("--quiet", "suppress output, exit code only")
 	.option(
@@ -209,6 +210,7 @@ program
 	.option("-o, --output <path>", "write report to file")
 	.option("--provider <name>", "LLM provider: anthropic, openai, google")
 	.option("--model <id>", "specific model ID")
+	.option("--check-integrity", "compare current skill fingerprints against skills-lock.json")
 	.option("--skip-llm", "disable LLM-assisted analysis")
 	.option("--verbose", "show progress and details")
 	.option("--quiet", "suppress output, exit code only")
@@ -236,6 +238,7 @@ policyCmd
 	.option("-f, --format <type>", "output format: terminal, json, markdown, or sarif", "terminal")
 	.option("-o, --output <path>", "write report to file")
 	.option("--fail-on <severity>", "exit code 1 threshold: blocked, violation, warning", "blocked")
+	.option("--show-exemptions", "show exempted findings in terminal and markdown output")
 	.option("--verbose", "show progress and details")
 	.option("--quiet", "suppress output, exit code only")
 	.action(async (dir, options) => {
@@ -346,6 +349,8 @@ program
 	.option("-f, --format <type>", "output format: terminal or json", "terminal")
 	.option("-o, --output <path>", "write report to file")
 	.option("--max-tokens <n>", "budget threshold for token count")
+	.option("--frozen-lockfile", "fail if skills-lock.json is missing or would change")
+	.option("--check-revocations <path>", "path to .skill-revocations.json file")
 	.option("--skip-audit", "skip audit check")
 	.option("--skip-lint", "skip lint check")
 	.option("--skip-budget", "skip budget check")

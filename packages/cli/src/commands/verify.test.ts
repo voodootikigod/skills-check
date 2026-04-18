@@ -140,4 +140,32 @@ describe("verifyCommand", () => {
 		await verifyCommand({ all: true, skipLlm: true });
 		expect(mockedRunVerify).toHaveBeenCalledWith(expect.objectContaining({ skipLlm: true }));
 	});
+
+	it("passes checkIntegrity option", async () => {
+		await verifyCommand({ all: true, checkIntegrity: true });
+		expect(mockedRunVerify).toHaveBeenCalledWith(expect.objectContaining({ checkIntegrity: true }));
+	});
+
+	it("returns 1 when integrity issues are found", async () => {
+		mockedRunVerify.mockResolvedValue(
+			makeReport({
+				integrity: {
+					lockFound: true,
+					results: [
+						{
+							skill: "react-patterns",
+							status: "modified",
+							field: "contentHash",
+							expected: "old",
+							actual: "new",
+						},
+					],
+					summary: { ok: 0, modified: 1, missing: 0, new: 0 },
+				},
+			})
+		);
+
+		const code = await verifyCommand({ all: true, checkIntegrity: true });
+		expect(code).toBe(1);
+	});
 });

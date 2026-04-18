@@ -46,6 +46,15 @@ freshness:
 audit:
   require_clean: true
   min_severity_to_block: high
+exemptions:
+  - skill: "legacy-deploy-skill"
+    rule: "banned"
+    reason: "Legacy migration in progress"
+    expires: "2026-12-31"
+    grantedBy: "jane@company.com"
+  - skill: "internal/*"
+    rule: "sources.allow"
+    reason: "Internal registry allowlist exception"
 `;
 		const policy = await parsePolicy(yaml);
 		expect(policy.version).toBe(1);
@@ -61,6 +70,40 @@ audit:
 		expect(policy.freshness?.max_version_drift).toBe("minor");
 		expect(policy.audit?.require_clean).toBe(true);
 		expect(policy.audit?.min_severity_to_block).toBe("high");
+		expect(policy.exemptions).toEqual([
+			{
+				skill: "legacy-deploy-skill",
+				rule: "banned",
+				reason: "Legacy migration in progress",
+				expires: "2026-12-31",
+				grantedBy: "jane@company.com",
+			},
+			{
+				skill: "internal/*",
+				rule: "sources.allow",
+				reason: "Internal registry allowlist exception",
+			},
+		]);
+	});
+
+	it("parses exemption glob and expired date values", async () => {
+		const policy = await parsePolicy(`
+version: 1
+exemptions:
+  - skill: "internal/*"
+    rule: "sources.allow"
+    reason: "Private registry"
+    expires: "2020-01-01"
+`);
+
+		expect(policy.exemptions).toEqual([
+			{
+				skill: "internal/*",
+				rule: "sources.allow",
+				reason: "Private registry",
+				expires: "2020-01-01",
+			},
+		]);
 	});
 
 	it("throws on empty content", async () => {
@@ -146,6 +189,33 @@ describe("validatePolicy", () => {
 			audit: { min_severity_to_block: "invalid" as "high" },
 		});
 		expect(errors.some((e) => e.includes("min_severity_to_block"))).toBe(true);
+	});
+
+	it("catches exemption entries with missing required fields", () => {
+		const errors = validatePolicy({
+			version: 1,
+			exemptions: [{ skill: "", rule: "", reason: "" }],
+		});
+
+		expect(errors).toContain('exemptions[0] must have a "skill" string field');
+		expect(errors).toContain('exemptions[0] must have a "rule" string field');
+		expect(errors).toContain('exemptions[0] must have a "reason" string field');
+	});
+
+	it("catches invalid exemption expiry values", () => {
+		const errors = validatePolicy({
+			version: 1,
+			exemptions: [
+				{
+					skill: "internal/*",
+					rule: "sources.allow",
+					reason: "Private registry",
+					expires: "not-a-date",
+				},
+			],
+		});
+
+		expect(errors).toContain("exemptions[0].expires must be a valid ISO 8601 date");
 	});
 });
 

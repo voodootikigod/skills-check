@@ -52,6 +52,24 @@ Some content here.
 		it("throws for missing file", async () => {
 			await expect(readSkillFile(join(tempDir, "missing.md"))).rejects.toThrow();
 		});
+
+		it("parses deprecated lifecycle metadata", async () => {
+			const content = `---
+name: old-skill
+deprecated: true
+deprecatedMessage: Use new-skill instead.
+---
+
+# Old Skill
+`;
+			const filePath = join(tempDir, "SKILL.md");
+			await writeFile(filePath, content, "utf-8");
+
+			const result = await readSkillFile(filePath);
+
+			expect(result.status).toBe("deprecated");
+			expect(result.deprecatedMessage).toBe("Use new-skill instead.");
+		});
 	});
 
 	describe("writeSkillFile", () => {

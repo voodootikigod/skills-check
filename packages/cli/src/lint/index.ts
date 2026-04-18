@@ -5,6 +5,7 @@ import { discoverSkillFiles } from "../shared/discovery.js";
 import { readSkillFile, writeSkillFile } from "../skill-io.js";
 import { autofix } from "./autofix.js";
 import { checkConditional } from "./rules/conditional.js";
+import { checkDeprecation } from "./rules/deprecation.js";
 import { checkFormats } from "./rules/format.js";
 import { checkPublishReady } from "./rules/publish.js";
 import { checkRecommended } from "./rules/recommended.js";
@@ -83,6 +84,7 @@ export async function runLint(paths: string[], options: LintOptions = {}): Promi
 			...checkRequired(skillFile),
 			...checkPublishReady(skillFile),
 			...checkConditional(skillFile),
+			...checkDeprecation(skillFile),
 			...checkRecommended(skillFile),
 			...checkFormats(skillFile),
 		];

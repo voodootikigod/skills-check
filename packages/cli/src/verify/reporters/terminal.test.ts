@@ -139,4 +139,28 @@ describe("formatVerifyTerminal", () => {
 		expect(output).toContain("2");
 		expect(output).toContain("1");
 	});
+
+	it("shows integrity results when present", () => {
+		const output = formatVerifyTerminal(
+			makeReport({
+				integrity: {
+					lockFound: true,
+					results: [
+						{
+							skill: "react-patterns",
+							status: "modified",
+							field: "contentHash",
+							expected: "old",
+							actual: "new",
+						},
+					],
+					summary: { ok: 0, modified: 1, missing: 0, new: 0 },
+				},
+			})
+		);
+
+		expect(output).toContain("Integrity");
+		expect(output).toContain("react-patterns: modified");
+		expect(output).toContain("contentHash");
+	});
 });

@@ -1,7 +1,53 @@
 import { readFile, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import type { PolicyExemption } from "@skills-check/schema";
 import { isSafeRegex } from "../shared/safe-regex.js";
 import type { SkillPolicy } from "./types.js";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return value !== null && typeof value === "object";
+}
+
+function normalizeExemption(value: unknown): PolicyExemption {
+	if (!isRecord(value)) {
+		return {
+			skill: "",
+			rule: "",
+			reason: "",
+		};
+	}
+
+	const expires =
+		typeof value.expires === "string"
+			? value.expires
+			: value.expires instanceof Date
+				? value.expires.toISOString()
+				: undefined;
+
+	return {
+		grantedBy: typeof value.grantedBy === "string" ? value.grantedBy : undefined,
+		expires,
+		reason: typeof value.reason === "string" ? value.reason : "",
+		rule: typeof value.rule === "string" ? value.rule : "",
+		skill: typeof value.skill === "string" ? value.skill : "",
+	};
+}
+
+function normalizePolicy(policy: Record<string, unknown>): SkillPolicy {
+	const exemptions = Array.isArray(policy.exemptions)
+		? policy.exemptions.map((exemption) => normalizeExemption(exemption))
+		: undefined;
+
+	return {
+		...policy,
+		exemptions,
+		version: policy.version as number,
+	} as SkillPolicy;
+}
+
+function isValidDateString(value: string): boolean {
+	return Number.isFinite(Date.parse(value));
+}
 
 /**
  * Dynamically import js-yaml (transitive dep via gray-matter).
@@ -40,7 +86,7 @@ export async function parsePolicy(content: string): Promise<SkillPolicy> {
 		throw new Error(`Unsupported policy version: ${policy.version}. Only version 1 is supported`);
 	}
 
-	return raw as SkillPolicy;
+	return normalizePolicy(policy);
 }
 
 /**
@@ -168,6 +214,39 @@ export function validatePolicy(policy: SkillPolicy): string[] {
 			typeof policy.freshness.max_age_days !== "number"
 		) {
 			errors.push("freshness.max_age_days must be a number");
+		}
+	}
+
+	// Validate exemptions
+	if (policy.exemptions !== undefined) {
+		if (!Array.isArray(policy.exemptions)) {
+			errors.push("exemptions must be an array");
+		} else {
+			for (let i = 0; i < policy.exemptions.length; i++) {
+				const exemption = policy.exemptions[i];
+				if (!exemption.skill || typeof exemption.skill !== "string") {
+					errors.push(`exemptions[${i}] must have a "skill" string field`);
+				}
+				if (!exemption.rule || typeof exemption.rule !== "string") {
+					errors.push(`exemptions[${i}] must have a "rule" string field`);
+				}
+				if (!exemption.reason || typeof exemption.reason !== "string") {
+					errors.push(`exemptions[${i}] must have a "reason" string field`);
+				}
+				if (exemption.expires !== undefined) {
+					if (typeof exemption.expires !== "string") {
+						errors.push(`exemptions[${i}].expires must be a string`);
+					} else if (!isValidDateString(exemption.expires)) {
+						errors.push(`exemptions[${i}].expires must be a valid ISO 8601 date`);
+					}
+				}
+				if (
+					exemption.grantedBy !== undefined &&
+					typeof exemption.grantedBy !== "string"
+				) {
+					errors.push(`exemptions[${i}].grantedBy must be a string`);
+				}
+			}
 		}
 	}
 

@@ -1247,4 +1247,4 @@ After all Wave 3 merges complete:
 - [ ] Run `npm run build` to verify Turbo build order
 - [ ] Update README.md CLI Reference section with new commands
 - [ ] Update CLAUDE.md commands table (Current vs Planned → mark as shipped)
-- [ ] Close beads issues: `bd close ss-0dh.4 ss-0dh.5`
+- [ ] Close GitHub issues for ss-0dh.4 and ss-0dh.5

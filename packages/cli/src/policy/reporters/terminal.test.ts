@@ -4,6 +4,8 @@ import { formatPolicyTerminal } from "./terminal.js";
 
 function makeReport(overrides?: Partial<PolicyReport>): PolicyReport {
 	return {
+		exemptedViolations: [],
+		exemptions: [],
 		policyFile: ".skill-policy.yml",
 		files: 1,
 		findings: [],
@@ -119,5 +121,56 @@ describe("formatPolicyTerminal", () => {
 		});
 		const output = formatPolicyTerminal(report);
 		expect(output).toContain("Bypasses safety checks");
+	});
+
+	it("shows exempted summary hint by default", () => {
+		const output = formatPolicyTerminal(
+			makeReport({
+				exemptedViolations: [
+					{
+						file: "skills/internal/SKILL.md",
+						severity: "blocked",
+						rule: "sources.allow",
+						message: "Source is not in the allow list",
+						skill: "internal/deploy",
+						exemption: {
+							skill: "internal/*",
+							rule: "sources.allow",
+							reason: "Private registry",
+						},
+					},
+				],
+			})
+		);
+
+		expect(output).toContain("finding(s) exempted");
+		expect(output).toContain("--show-exemptions");
+	});
+
+	it("shows exempted findings when requested", () => {
+		const output = formatPolicyTerminal(
+			makeReport({
+				showExemptions: true,
+				exemptedViolations: [
+					{
+						file: "skills/internal/SKILL.md",
+						severity: "blocked",
+						rule: "sources.allow",
+						message: "Source is not in the allow list",
+						skill: "internal/deploy",
+						exemption: {
+							skill: "internal/*",
+							rule: "sources.allow",
+							reason: "Private registry",
+							expires: "2026-12-31",
+						},
+					},
+				],
+			})
+		);
+
+		expect(output).toContain("EXEMPTED FINDINGS (1)");
+		expect(output).toContain("Private registry");
+		expect(output).toContain("2026-12-31");
 	});
 });

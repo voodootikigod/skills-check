@@ -1,5 +1,9 @@
 import type { SkillTelemetryEvent, TelemetryReader, TelemetryReaderOptions } from "./types.js";
 
+const SQLITE_ERROR =
+	"SQLite reader requires Node.js 22+ with built-in sqlite module. " +
+	"Use a JSONL telemetry store instead, or upgrade Node.js.";
+
 /**
  * Read telemetry events from a SQLite database.
  * Uses Node 22 built-in node:sqlite module.
@@ -10,6 +14,10 @@ export class SQLiteReader implements TelemetryReader {
 
 	constructor(dbPath: string) {
 		this.dbPath = dbPath;
+	}
+
+	private toSqliteError(): Error {
+		return new Error(SQLITE_ERROR);
 	}
 
 	private async getDb(): Promise<{
@@ -23,10 +31,7 @@ export class SQLiteReader implements TelemetryReader {
 			this.db = new DatabaseSync(this.dbPath, { readOnly: true });
 			return this.db as never;
 		} catch {
-			throw new Error(
-				"SQLite reader requires Node.js 22+ with built-in sqlite module. " +
-					"Use a JSONL telemetry store instead, or upgrade Node.js."
-			);
+			throw this.toSqliteError();
 		}
 	}
 
@@ -45,10 +50,15 @@ export class SQLiteReader implements TelemetryReader {
 			params.push(options.until.toISOString());
 		}
 
-		sql += " ORDER BY timestamp DESC";
+		sql += " ORDER BY timestamp DESC, request_id ASC, detection ASC";
 
-		const stmt = db.prepare(sql);
-		const rows = stmt.all(...params) as Record<string, unknown>[];
+		let rows: Record<string, unknown>[];
+		try {
+			const stmt = db.prepare(sql);
+			rows = stmt.all(...params) as Record<string, unknown>[];
+		} catch {
+			throw this.toSqliteError();
+		}
 
 		return rows.map((row) => ({
 			schemaVersion: 1 as const,

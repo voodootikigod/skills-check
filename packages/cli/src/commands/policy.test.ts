@@ -29,6 +29,8 @@ const mockedDiscoverPolicyFile = vi.mocked(discoverPolicyFile);
 
 function makeReport(overrides?: Partial<PolicyReport>): PolicyReport {
 	return {
+		exemptedViolations: [],
+		exemptions: [],
 		policyFile: ".skill-policy.yml",
 		files: 1,
 		findings: [],
@@ -131,6 +133,16 @@ describe("policyCheckCommand", () => {
 	it("uses specified policy path", async () => {
 		await policyCheckCommand(".", { policy: "/custom/policy.yml" });
 		expect(mockedLoadPolicyFile).toHaveBeenCalledWith("/custom/policy.yml");
+	});
+
+	it("passes --show-exemptions to the policy runner", async () => {
+		await policyCheckCommand(".", { showExemptions: true });
+		expect(mockedRunPolicyCheck).toHaveBeenCalledWith(
+			["."],
+			{ version: 1 },
+			"/project/.skill-policy.yml",
+			expect.objectContaining({ showExemptions: true })
+		);
 	});
 
 	it("outputs json format", async () => {

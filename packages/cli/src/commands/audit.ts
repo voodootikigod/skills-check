@@ -4,8 +4,10 @@ import { formatJson } from "../audit/reporters/json.js";
 import { formatMarkdown } from "../audit/reporters/markdown.js";
 import { formatSarif } from "../audit/reporters/sarif.js";
 import { formatTerminal } from "../audit/reporters/terminal.js";
-import type { AuditOptions, AuditSeverity } from "../audit/types.js";
+import type { AuditFinding, AuditOptions, AuditReport, AuditSeverity } from "../audit/types.js";
+import { runFingerprint } from "../fingerprint/index.js";
 import type { IsolationChoice } from "../isolation/types.js";
+import { createRevocationAuditFindings, readRevocationList } from "../revocation/index.js";
 import { auditThreshold, formatAndOutput } from "../shared/index.js";
 
 interface AuditCommandOptions {
@@ -16,6 +18,7 @@ interface AuditCommandOptions {
 	isolation?: IsolationChoice | boolean;
 	output?: string;
 	packagesOnly?: boolean;
+	checkRevocations?: string;
 	quiet?: boolean;
 	skipUrls?: boolean;
 	uniqueOnly?: boolean;
@@ -95,6 +98,9 @@ export async function auditCommand(dir: string, options: AuditCommandOptions): P
 			if (options.ignore) {
 				cmdParts.push("--ignore", options.ignore);
 			}
+			if (options.checkRevocations) {
+				cmdParts.push("--check-revocations", options.checkRevocations);
+			}
 			if (options.verbose) {
 				cmdParts.push("--verbose");
 			}
@@ -139,6 +145,9 @@ export async function auditCommand(dir: string, options: AuditCommandOptions): P
 		if (options.ignore) {
 			console.error(chalk.dim(`Ignore file: ${options.ignore}`));
 		}
+		if (options.checkRevocations) {
+			console.error(chalk.dim(`Revocation file: ${options.checkRevocations}`));
+		}
 	}
 
 	const auditOptions: AuditOptions = {
@@ -152,7 +161,9 @@ export async function auditCommand(dir: string, options: AuditCommandOptions): P
 		includeRegistryAudits: options.includeRegistryAudits,
 	};
 
-	const report = await runAudit([dir], auditOptions);
+	const baseReport = await runAudit([dir], auditOptions);
+	const revocationFindings = await loadRevocationFindings(dir, options.checkRevocations);
+	const report = mergeAuditReport(baseReport, revocationFindings);
 
 	if (options.verbose) {
 		console.error(
@@ -177,4 +188,41 @@ export async function auditCommand(dir: string, options: AuditCommandOptions): P
 		auditThreshold.meetsThreshold(f.severity, failOn)
 	);
 	return hasFailingFindings ? 1 : 0;
+}
+
+async function loadRevocationFindings(
+	dir: string,
+	revocationPath?: string
+): Promise<AuditFinding[]> {
+	if (!revocationPath) {
+		return [];
+	}
+
+	const revocations = readRevocationList(revocationPath);
+	if (!revocations) {
+		throw new Error(`Revocation list not found: ${revocationPath}`);
+	}
+
+	const registry = await runFingerprint([dir]);
+	return createRevocationAuditFindings(registry, revocations);
+}
+
+function mergeAuditReport(report: AuditReport, extraFindings: AuditFinding[]): AuditReport {
+	if (extraFindings.length === 0) {
+		return report;
+	}
+
+	const findings = [...report.findings, ...extraFindings];
+
+	return {
+		...report,
+		findings,
+		summary: {
+			critical: findings.filter((finding) => finding.severity === "critical").length,
+			high: findings.filter((finding) => finding.severity === "high").length,
+			medium: findings.filter((finding) => finding.severity === "medium").length,
+			low: findings.filter((finding) => finding.severity === "low").length,
+			total: findings.length,
+		},
+	};
 }

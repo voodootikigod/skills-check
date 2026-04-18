@@ -13,6 +13,8 @@ import { diffStats, formatDiff } from "../diff.js";
 import { buildSystemPrompt, buildUserPrompt } from "../llm/prompts.js";
 import { resolveModel } from "../llm/providers.js";
 import { RefreshResultSchema } from "../llm/schemas.js";
+import { runFingerprint } from "../fingerprint/index.js";
+import { readLockFile, synchronizeLockFile, writeLockFile } from "../lockfile/index.js";
 import { fetchLatestVersions } from "../npm.js";
 import { loadRegistry, saveRegistry } from "../registry.js";
 import { getSeverity, normalizeVersion } from "../severity.js";
@@ -342,6 +344,19 @@ export async function refreshCommand(
 		registry.lastCheck = new Date().toISOString();
 		const savedPath = await saveRegistry(registry, options.registry);
 		console.log(chalk.dim(`\nRegistry updated: ${savedPath}`));
+
+		try {
+			const fingerprintRegistry = await runFingerprint([resolvedSkillsDir]);
+			const nextLock = synchronizeLockFile(readLockFile(resolvedSkillsDir), fingerprintRegistry);
+			writeLockFile(resolvedSkillsDir, nextLock);
+			console.log(chalk.dim(`Lock file updated: ${resolvedSkillsDir}/skills-lock.json`));
+		} catch (error) {
+			console.error(
+				chalk.yellow(
+					`Warning: failed to update lock file: ${error instanceof Error ? error.message : String(error)}`
+				)
+			);
+		}
 	}
 
 	// Summary

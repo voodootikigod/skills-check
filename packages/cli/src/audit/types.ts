@@ -9,7 +9,8 @@ export type AuditCategory =
 	| "metadata-incomplete"
 	| "url-liveness"
 	| "advisory-match"
-	| "registry-audit";
+	| "registry-audit"
+	| "revoked-skill";
 
 export interface AuditFinding {
 	category: AuditCategory;

@@ -116,6 +116,10 @@ export async function runFingerprint(
 			watermark: watermarkStr,
 			tokenCount,
 			path: filePath,
+			...(skillFile.status ? { status: skillFile.status } : {}),
+			...(skillFile.deprecatedMessage
+				? { deprecatedMessage: skillFile.deprecatedMessage }
+				: {}),
 		});
 	}
 

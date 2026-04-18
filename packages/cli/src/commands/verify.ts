@@ -11,6 +11,7 @@ interface VerifyCommandOptions {
 	after?: string;
 	all?: boolean;
 	before?: string;
+	checkIntegrity?: boolean;
 	format?: "terminal" | "json" | "markdown" | "sarif";
 	model?: string;
 	output?: string;
@@ -60,6 +61,7 @@ export async function verifyCommand(options: VerifyCommandOptions): Promise<numb
 		skill: options.skill,
 		all: options.all,
 		before: options.before,
+		checkIntegrity: options.checkIntegrity,
 		after: options.after,
 		suggest: options.suggest,
 		format: options.format,
@@ -91,6 +93,13 @@ export async function verifyCommand(options: VerifyCommandOptions): Promise<numb
 		}
 	);
 
-	// Exit code: 1 if any mismatches found
-	return report.summary.failed > 0 ? 1 : 0;
+	const hasIntegrityIssues =
+		options.checkIntegrity &&
+		(!report.integrity?.lockFound ||
+			(report.integrity.summary.modified ?? 0) > 0 ||
+			(report.integrity.summary.missing ?? 0) > 0 ||
+			(report.integrity.summary.new ?? 0) > 0);
+
+	// Exit code: 1 if any mismatches or integrity issues found
+	return report.summary.failed > 0 || hasIntegrityIssues ? 1 : 0;
 }

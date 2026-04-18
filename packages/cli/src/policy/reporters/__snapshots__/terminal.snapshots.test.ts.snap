@@ -1,0 +1,59 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatPolicyTerminal snapshots > renders clean output 1`] = `
+"
+Policy Check: .skill-policy.yml
+==================================================
+
+REQUIRED (all satisfied):
+  + security-review installed
+
+All skills comply with policy.
+
+  2 file(s) checked
+"
+`;
+
+exports[`formatPolicyTerminal snapshots > renders mixed severities and required skill failures 1`] = `
+"
+Policy Check: .skill-policy.yml
+==================================================
+
+BLOCKED (1):
+  X skills/vendor/rogue/SKILL.md
+    Source "evil/skills" is in the deny list
+
+VIOLATIONS (1):
+  ! skills/internal/deploy/SKILL.md (line 14)
+    Contains denied pattern: exec
+    Runtime shell execution is not allowed.
+
+WARNINGS (1):
+  * skills/internal/legacy/SKILL.md
+    Last verified 142 days ago
+    Review the upstream changelog.
+
+REQUIRED:
+  + security-review installed
+  X incident-response MISSING
+
+Summary: 1 blocked, 1 violation(s), 1 warning(s). Policy check FAILED.
+"
+`;
+
+exports[`formatPolicyTerminal snapshots > renders multiple violations from the same reporter 1`] = `
+"
+Policy Check: .skill-policy.yml
+==================================================
+
+VIOLATIONS (2):
+  ! skills/internal/deploy/SKILL.md (line 14)
+    Contains denied pattern: exec
+    Runtime shell execution is not allowed.
+  ! skills/internal/deploy/SKILL.md
+    Missing required pattern: rollback
+    Deployment skills must document rollback steps.
+
+Summary: 0 blocked, 2 violation(s), 0 warning(s). Policy check FAILED.
+"
+`;

@@ -3,6 +3,7 @@ import type { PolicyReport, PolicySeverity } from "../types.js";
 export function formatPolicyMarkdown(report: PolicyReport): string {
 	const lines: string[] = [];
 	const now = report.generatedAt.split("T")[0];
+	const exemptedViolations = report.exemptedViolations ?? [];
 
 	lines.push("# Skills Check Policy Report");
 	lines.push("");
@@ -18,6 +19,7 @@ export function formatPolicyMarkdown(report: PolicyReport): string {
 	lines.push(`| Blocked | ${report.summary.blocked} |`);
 	lines.push(`| Violations | ${report.summary.violations} |`);
 	lines.push(`| Warnings | ${report.summary.warnings} |`);
+	lines.push(`| Exempted | ${exemptedViolations.length} |`);
 	const total = report.summary.blocked + report.summary.violations + report.summary.warnings;
 	lines.push(`| **Total** | **${total}** |`);
 	lines.push("");
@@ -26,6 +28,12 @@ export function formatPolicyMarkdown(report: PolicyReport): string {
 
 	if (report.findings.length === 0 && report.required.every((r) => r.satisfied)) {
 		lines.push("All skills comply with policy.");
+		if (exemptedViolations.length > 0 && !report.showExemptions) {
+			lines.push("");
+			lines.push(
+				`${exemptedViolations.length} finding(s) were exempted. Re-run with --show-exemptions to display.`
+			);
+		}
 		lines.push("");
 		return lines.join("\n");
 	}
@@ -52,6 +60,32 @@ export function formatPolicyMarkdown(report: PolicyReport): string {
 		}
 
 		lines.push("");
+	}
+
+	if (exemptedViolations.length > 0) {
+		lines.push("## Exempted Findings");
+		lines.push("");
+
+		if (!report.showExemptions) {
+			lines.push(
+				`${exemptedViolations.length} finding(s) were exempted. Re-run with --show-exemptions to display.`
+			);
+			lines.push("");
+		} else {
+			lines.push("| Skill | File | Rule | Reason | Expires |");
+			lines.push("|-------|------|------|--------|---------|");
+
+			for (const finding of exemptedViolations) {
+				const skill = finding.skill ?? finding.exemption.skill;
+				const reason = finding.exemption.reason.replace(/\|/g, "\\|");
+				const lineRef = finding.line ? ` (line ${finding.line})` : "";
+				lines.push(
+					`| ${skill} | ${finding.file}${lineRef} | ${finding.rule} | ${reason} | ${finding.exemption.expires ?? ""} |`
+				);
+			}
+
+			lines.push("");
+		}
 	}
 
 	// Required skills section

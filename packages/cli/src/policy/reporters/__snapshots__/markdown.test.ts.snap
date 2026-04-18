@@ -1,0 +1,95 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatPolicyMarkdown > renders clean output snapshot 1`] = `
+"# Skills Check Policy Report
+
+Generated: 2026-04-18
+Policy: .skill-policy.yml
+
+## Summary
+
+| Severity | Count |
+|----------|-------|
+| Blocked | 0 |
+| Violations | 0 |
+| Warnings | 0 |
+| Exempted | 0 |
+| **Total** | **0** |
+
+Files checked: 2
+
+All skills comply with policy.
+"
+`;
+
+exports[`formatPolicyMarkdown > renders mixed severities snapshot 1`] = `
+"# Skills Check Policy Report
+
+Generated: 2026-04-18
+Policy: .skill-policy.yml
+
+## Summary
+
+| Severity | Count |
+|----------|-------|
+| Blocked | 1 |
+| Violations | 1 |
+| Warnings | 1 |
+| Exempted | 0 |
+| **Total** | **3** |
+
+Files checked: 2
+
+## Blocked (1)
+
+| File | Rule | Message |
+|------|------|---------|
+| skills/vendor/rogue/SKILL.md | sources.deny | Source "evil/skills" is in the deny list |
+
+## Violation (1)
+
+| File | Rule | Message |
+|------|------|---------|
+| skills/internal/deploy/SKILL.md (line 14) | content.deny_patterns | Contains denied pattern: exec |
+
+## Warning (1)
+
+| File | Rule | Message |
+|------|------|---------|
+| skills/internal/legacy/SKILL.md | freshness.max_age_days | Last verified 142 days ago |
+
+## Required Skills
+
+| Skill | Status |
+|-------|--------|
+| security-review | Installed |
+| incident-response | **MISSING** |
+"
+`;
+
+exports[`formatPolicyMarkdown > renders multiple violations snapshot 1`] = `
+"# Skills Check Policy Report
+
+Generated: 2026-04-18
+Policy: .skill-policy.yml
+
+## Summary
+
+| Severity | Count |
+|----------|-------|
+| Blocked | 0 |
+| Violations | 2 |
+| Warnings | 0 |
+| Exempted | 0 |
+| **Total** | **2** |
+
+Files checked: 2
+
+## Violation (2)
+
+| File | Rule | Message |
+|------|------|---------|
+| skills/internal/deploy/SKILL.md (line 14) | content.deny_patterns | Contains denied pattern: exec |
+| skills/internal/deploy/SKILL.md | content.require_patterns | Missing required pattern: rollback \\| recovery |
+"
+`;

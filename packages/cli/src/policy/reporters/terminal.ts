@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { PolicyFinding, PolicyReport } from "../types.js";
+import type { PolicyExemptedViolation, PolicyFinding, PolicyReport } from "../types.js";
 
 function groupByFile(findings: PolicyFinding[]): Map<string, PolicyFinding[]> {
 	const groups = new Map<string, PolicyFinding[]>();
@@ -7,6 +7,18 @@ function groupByFile(findings: PolicyFinding[]): Map<string, PolicyFinding[]> {
 		const existing = groups.get(f.file) ?? [];
 		existing.push(f);
 		groups.set(f.file, existing);
+	}
+	return groups;
+}
+
+function groupExemptedByFile(
+	findings: PolicyExemptedViolation[]
+): Map<string, PolicyExemptedViolation[]> {
+	const groups = new Map<string, PolicyExemptedViolation[]>();
+	for (const finding of findings) {
+		const existing = groups.get(finding.file) ?? [];
+		existing.push(finding);
+		groups.set(finding.file, existing);
 	}
 	return groups;
 }
@@ -23,6 +35,7 @@ export function formatPolicyTerminal(report: PolicyReport): string {
 	const blocked = report.findings.filter((f) => f.severity === "blocked");
 	const violations = report.findings.filter((f) => f.severity === "violation");
 	const warnings = report.findings.filter((f) => f.severity === "warning");
+	const exemptedViolations = report.exemptedViolations ?? [];
 
 	// BLOCKED section
 	if (blocked.length > 0) {
@@ -72,6 +85,34 @@ export function formatPolicyTerminal(report: PolicyReport): string {
 			}
 		}
 		lines.push("");
+	}
+
+	if (exemptedViolations.length > 0) {
+		if (report.showExemptions) {
+			lines.push(chalk.dim.italic(`EXEMPTED FINDINGS (${exemptedViolations.length}):`));
+			const grouped = groupExemptedByFile(exemptedViolations);
+			for (const [file, findings] of grouped) {
+				for (const finding of findings) {
+					const lineRef = finding.line ? ` (line ${finding.line})` : "";
+					lines.push(`  ${chalk.dim("-")} ${chalk.dim(file)}${lineRef}`);
+					lines.push(`    ${chalk.dim(finding.message)}`);
+					lines.push(
+						`    ${chalk.dim(`exempted by ${finding.exemption.skill} → ${finding.exemption.reason}`)}`
+					);
+					if (finding.exemption.expires) {
+						lines.push(`    ${chalk.dim(`expires ${finding.exemption.expires}`)}`);
+					}
+				}
+			}
+			lines.push("");
+		} else {
+			lines.push(
+				chalk.dim(
+					`${exemptedViolations.length} finding(s) exempted. Re-run with --show-exemptions to display.`
+				)
+			);
+			lines.push("");
+		}
 	}
 
 	// REQUIRED section

@@ -1,3 +1,5 @@
+import type { PolicyExemption } from "@skills-check/schema";
+
 export interface SkillPolicy {
 	audit?: {
 		require_clean?: boolean;
@@ -8,6 +10,7 @@ export interface SkillPolicy {
 		deny_patterns?: Array<{ pattern: string; reason: string }>;
 		require_patterns?: Array<{ pattern: string; reason: string }>;
 	};
+	exemptions?: PolicyExemption[];
 	freshness?: {
 		max_age_days?: number;
 		max_version_drift?: "major" | "minor" | "patch";
@@ -34,14 +37,22 @@ export interface PolicyFinding {
 	message: string;
 	rule: string;
 	severity: PolicySeverity;
+	skill?: string;
+}
+
+export interface PolicyExemptedViolation extends PolicyFinding {
+	exemption: PolicyExemption;
 }
 
 export interface PolicyReport {
+	exemptedViolations?: PolicyExemptedViolation[];
+	exemptions?: PolicyExemption[];
 	files: number;
 	findings: PolicyFinding[];
 	generatedAt: string;
 	policyFile: string;
 	required: Array<{ skill: string; satisfied: boolean }>;
+	showExemptions?: boolean;
 	summary: { blocked: number; violations: number; warnings: number };
 }
 
@@ -51,5 +62,6 @@ export interface PolicyOptions {
 	format?: "terminal" | "json" | "markdown" | "sarif";
 	output?: string;
 	policy?: string;
+	showExemptions?: boolean;
 	skill?: string;
 }

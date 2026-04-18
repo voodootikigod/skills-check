@@ -144,4 +144,32 @@ describe("runFingerprint", () => {
 		const result = await runFingerprint(["."]);
 		expect(result.entries[0].version).toBe("19.1.0");
 	});
+
+	it("propagates deprecated status and message to fingerprint entries", async () => {
+		const raw =
+			"---\nname: old-skill\nversion: 1.0.0\ndeprecated: true\ndeprecatedMessage: Use new-skill instead.\n---\n# Content";
+		mockDiscover.mockResolvedValue(["/skills/old-skill/SKILL.md"]);
+		mockRead.mockResolvedValue({
+			path: "/skills/old-skill/SKILL.md",
+			frontmatter: {
+				name: "old-skill",
+				version: "1.0.0",
+				deprecated: true,
+				deprecatedMessage: "Use new-skill instead.",
+			},
+			content: "# Content",
+			raw,
+			status: "deprecated",
+			deprecatedMessage: "Use new-skill instead.",
+		});
+
+		const result = await runFingerprint(["."]);
+
+		expect(result.entries[0]).toEqual(
+			expect.objectContaining({
+				status: "deprecated",
+				deprecatedMessage: "Use new-skill instead.",
+			})
+		);
+	});
 });

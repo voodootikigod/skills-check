@@ -1,6 +1,17 @@
 import chalk from "chalk";
 import type { VerifyReport, VerifyResult } from "../types.js";
 
+function integrityIcon(status: "ok" | "modified" | "missing" | "new"): string {
+	switch (status) {
+		case "ok":
+			return chalk.green("✓");
+		case "missing":
+			return chalk.red("✗");
+		default:
+			return chalk.yellow("⚠");
+	}
+}
+
 function assessmentIcon(match: boolean): string {
 	return match ? chalk.green("[PASS]") : chalk.red("[FAIL]");
 }
@@ -79,7 +90,7 @@ export function formatVerifyTerminal(report: VerifyReport): string {
 	lines.push("=".repeat(50));
 	lines.push("");
 
-	if (report.results.length === 0) {
+	if (report.results.length === 0 && !report.integrity) {
 		lines.push(chalk.dim("No skills found to verify."));
 		lines.push("");
 		return lines.join("\n");
@@ -87,6 +98,23 @@ export function formatVerifyTerminal(report: VerifyReport): string {
 
 	for (const result of report.results) {
 		lines.push(...formatResult(result));
+	}
+
+	if (report.integrity) {
+		lines.push(chalk.bold("Integrity"));
+		lines.push("-".repeat(50));
+		if (!report.integrity.lockFound) {
+			lines.push(chalk.red("  skills-lock.json not found"));
+		} else {
+			for (const result of report.integrity.results) {
+				const detail =
+					result.status === "modified"
+						? ` (${result.field}: ${result.expected ?? "<missing>"} -> ${result.actual ?? "<missing>"})`
+						: "";
+				lines.push(`  ${integrityIcon(result.status)} ${result.skill}: ${result.status}${detail}`);
+			}
+		}
+		lines.push("");
 	}
 
 	// Summary

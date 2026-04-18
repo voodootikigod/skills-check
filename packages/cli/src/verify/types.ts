@@ -1,3 +1,5 @@
+import type { IntegrityResult } from "../lockfile/index.js";
+
 export type VersionBump = "major" | "minor" | "patch";
 
 export interface ChangeSignal {
@@ -22,6 +24,11 @@ export interface VerifyResult {
 
 export interface VerifyReport {
 	generatedAt: string;
+	integrity?: {
+		lockFound: boolean;
+		results: IntegrityResult[];
+		summary: { missing: number; modified: number; new: number; ok: number };
+	};
 	results: VerifyResult[];
 	summary: { passed: number; failed: number; skipped: number };
 }
@@ -30,6 +37,7 @@ export interface VerifyOptions {
 	after?: string;
 	all?: boolean;
 	before?: string;
+	checkIntegrity?: boolean;
 	format?: "terminal" | "json" | "markdown" | "sarif";
 	model?: string;
 	output?: string;

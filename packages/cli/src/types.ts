@@ -31,12 +31,14 @@ export interface ScannedSkill {
 	allowedTools?: string;
 	compatibility?: string;
 	compatibilityEntries?: CompatibilityEntry[];
+	deprecatedMessage?: string;
 	name: string;
 	path: string;
 	product?: string;
 	/** @deprecated Use `resolvedPackages` from compatibility field instead */
 	productVersion?: string;
 	resolvedPackages?: CompatibilityEntry[];
+	status?: "active" | "deprecated" | "revoked";
 }
 
 /**

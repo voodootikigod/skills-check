@@ -1,8 +1,16 @@
 import { stat } from "node:fs/promises";
+import { basename, dirname } from "node:path";
+import type { PolicyExemption } from "@skills-check/schema";
 import { discoverSkillFiles } from "../shared/discovery.js";
 import type { SkillFile } from "../skill-io.js";
 import { readSkillFile } from "../skill-io.js";
-import type { PolicyFinding, PolicyOptions, PolicyReport, SkillPolicy } from "./types.js";
+import type {
+	PolicyExemptedViolation,
+	PolicyFinding,
+	PolicyOptions,
+	PolicyReport,
+	SkillPolicy,
+} from "./types.js";
 import { checkAuditClean } from "./validators/audit-integration.js";
 import { checkBanned } from "./validators/banned.js";
 import { checkContent } from "./validators/content.js";
@@ -10,6 +18,108 @@ import { checkFreshness } from "./validators/freshness.js";
 import { checkMetadata } from "./validators/metadata.js";
 import { checkRequired } from "./validators/required.js";
 import { checkSources } from "./validators/sources.js";
+
+function escapeRegex(value: string): string {
+	return value.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+}
+
+function matchesSkillPattern(skill: string, pattern: string): boolean {
+	const regexPattern = escapeRegex(
+		pattern
+			.replaceAll("**", "__DOUBLE_STAR__")
+			.replaceAll("*", "__SINGLE_STAR__")
+			.replaceAll("?", "__QUESTION_MARK__")
+	)
+		.replaceAll("__DOUBLE_STAR__", ".*")
+		.replaceAll("__SINGLE_STAR__", "[^/]*")
+		.replaceAll("__QUESTION_MARK__", "[^/]");
+
+	return new RegExp(`^${regexPattern}$`).test(skill);
+}
+
+function normalizeExpiryDate(expires: string): number | null {
+	if (/^\d{4}-\d{2}-\d{2}$/.test(expires)) {
+		return Date.parse(`${expires}T23:59:59.999Z`);
+	}
+
+	const parsed = Date.parse(expires);
+	return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getSkillName(file: SkillFile): string | undefined {
+	const frontmatterName = file.frontmatter.name;
+	if (typeof frontmatterName === "string" && frontmatterName.length > 0) {
+		return frontmatterName;
+	}
+
+	const directoryName = basename(dirname(file.path));
+	return directoryName.length > 0 ? directoryName : undefined;
+}
+
+function attachSkill(findings: PolicyFinding[], skill: string | undefined): PolicyFinding[] {
+	if (!skill) {
+		return findings;
+	}
+
+	return findings.map((finding) => ({
+		...finding,
+		skill,
+	}));
+}
+
+function withExpiredExemptionWarning(
+	finding: PolicyFinding,
+	exemption: PolicyExemption
+): PolicyFinding {
+	const warning = `Exemption expired on ${exemption.expires}: ${exemption.reason}`;
+	return {
+		...finding,
+		detail: finding.detail ? `${finding.detail}\n${warning}` : warning,
+	};
+}
+
+export function applyExemptions(
+	violations: PolicyFinding[],
+	exemptions: PolicyExemption[],
+	now = new Date()
+): { active: PolicyFinding[]; exempted: PolicyExemptedViolation[] } {
+	if (exemptions.length === 0) {
+		return { active: violations, exempted: [] };
+	}
+
+	const active: PolicyFinding[] = [];
+	const exempted: PolicyExemptedViolation[] = [];
+
+	for (const violation of violations) {
+		const matchingExemption = exemptions.find((exemption) => {
+			if (!violation.skill) {
+				return false;
+			}
+
+			return exemption.rule === violation.rule && matchesSkillPattern(violation.skill, exemption.skill);
+		});
+
+		if (!matchingExemption) {
+			active.push(violation);
+			continue;
+		}
+
+		if (matchingExemption.expires) {
+			const expiry = normalizeExpiryDate(matchingExemption.expires);
+			if (expiry !== null && expiry < now.getTime()) {
+				active.push(withExpiredExemptionWarning(violation, matchingExemption));
+				continue;
+			}
+		}
+
+		exempted.push({
+			...violation,
+			exemption: matchingExemption,
+		});
+	}
+
+	return { active, exempted };
+}
 
 /**
  * Run a policy check against discovered skill files.
@@ -58,18 +168,23 @@ export async function runPolicyCheck(
 
 	const allFindings: PolicyFinding[] = [];
 	const skillFiles: SkillFile[] = [];
+	const skillNameByPath = new Map<string, string>();
 
 	// Read and validate each skill file
 	for (const filePath of filesToCheck) {
 		const sf = await readSkillFile(filePath);
 		skillFiles.push(sf);
+		const skillName = getSkillName(sf);
+		if (skillName) {
+			skillNameByPath.set(sf.path, skillName);
+		}
 
 		// Run per-file validators
-		allFindings.push(...checkSources(sf, policy));
-		allFindings.push(...checkBanned(sf, policy));
-		allFindings.push(...checkMetadata(sf, policy));
-		allFindings.push(...checkContent(sf, policy));
-		allFindings.push(...checkFreshness(sf, policy));
+		allFindings.push(...attachSkill(checkSources(sf, policy), skillName));
+		allFindings.push(...attachSkill(checkBanned(sf, policy), skillName));
+		allFindings.push(...attachSkill(checkMetadata(sf, policy), skillName));
+		allFindings.push(...attachSkill(checkContent(sf, policy), skillName));
+		allFindings.push(...attachSkill(checkFreshness(sf, policy), skillName));
 	}
 
 	// Check required skills (across all discovered files, not just filtered)
@@ -91,6 +206,7 @@ export async function runPolicyCheck(
 				severity: "violation",
 				rule: "required",
 				message: `Required skill "${req.skill}" is not installed`,
+				skill: req.skill,
 			});
 		}
 	}
@@ -98,21 +214,31 @@ export async function runPolicyCheck(
 	// Audit integration (only if paths are provided and audit required)
 	if (policy.audit?.require_clean) {
 		const auditFindings = await checkAuditClean(paths, policy);
-		allFindings.push(...auditFindings);
+		allFindings.push(
+			...auditFindings.map((finding) => ({
+				...finding,
+				skill: skillNameByPath.get(finding.file),
+			}))
+		);
 	}
+
+	const { active, exempted } = applyExemptions(allFindings, policy.exemptions ?? []);
 
 	// Compute summary
 	const summary = {
-		blocked: allFindings.filter((f) => f.severity === "blocked").length,
-		violations: allFindings.filter((f) => f.severity === "violation").length,
-		warnings: allFindings.filter((f) => f.severity === "warning").length,
+		blocked: active.filter((f) => f.severity === "blocked").length,
+		violations: active.filter((f) => f.severity === "violation").length,
+		warnings: active.filter((f) => f.severity === "warning").length,
 	};
 
 	return {
+		exemptedViolations: exempted,
+		exemptions: policy.exemptions ?? [],
 		policyFile,
 		files: filesToCheck.length,
-		findings: allFindings,
+		findings: active,
 		required,
+		showExemptions: options.showExemptions,
 		summary,
 		generatedAt: new Date().toISOString(),
 	};

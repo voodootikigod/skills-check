@@ -2,6 +2,7 @@ import { lstat, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import matter from "gray-matter";
 import { extractVersionedPackages, parseCompatibility } from "./compatibility/index.js";
+import { resolveSkillLifecycle } from "./skill-io.js";
 import type { ScannedSkill } from "./types.js";
 
 /**
@@ -60,9 +61,11 @@ export async function scanSkills(skillsDir: string): Promise<ScannedSkill[]> {
 
 			try {
 				const { data } = matter(content);
+				const lifecycle = resolveSkillLifecycle(data);
 				const skill: ScannedSkill = {
 					name: (data.name as string) ?? entry,
 					path: skillPath,
+					...lifecycle,
 				};
 
 				// Top-level product-version (most common format)

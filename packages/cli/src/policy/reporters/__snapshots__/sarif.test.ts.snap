@@ -1,0 +1,239 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatPolicySarif > renders clean SARIF snapshot 1`] = `
+"{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "skills-check/policy",
+          "informationUri": "https://skillscheck.ai",
+          "rules": []
+        }
+      },
+      "results": [],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "endTimeUtc": "2026-04-18T12:00:00.000Z"
+        }
+      ]
+    }
+  ]
+}"
+`;
+
+exports[`formatPolicySarif > renders mixed severities with SARIF 2.1.0 level mapping 1`] = `
+"{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "skills-check/policy",
+          "informationUri": "https://skillscheck.ai",
+          "rules": [
+            {
+              "id": "skills-check/policy/sources.deny",
+              "shortDescription": {
+                "text": "sources.deny"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "skills-check/policy/content.deny_patterns",
+              "shortDescription": {
+                "text": "content.deny_patterns"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "skills-check/policy/freshness.max_age_days",
+              "shortDescription": {
+                "text": "freshness.max_age_days"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "skills-check/policy/sources.deny",
+          "level": "error",
+          "message": {
+            "text": "Source \\"evil/skills\\" is in the deny list"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "skills/vendor/rogue/SKILL.md"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "severity": "blocked"
+          }
+        },
+        {
+          "ruleId": "skills-check/policy/content.deny_patterns",
+          "level": "warning",
+          "message": {
+            "text": "Contains denied pattern: exec"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "skills/internal/deploy/SKILL.md"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "properties": {
+            "severity": "violation",
+            "detail": "Runtime shell execution is not allowed."
+          }
+        },
+        {
+          "ruleId": "skills-check/policy/freshness.max_age_days",
+          "level": "note",
+          "message": {
+            "text": "Last verified 142 days ago"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "skills/internal/legacy/SKILL.md"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "severity": "warning",
+            "detail": "Review the upstream changelog."
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "endTimeUtc": "2026-04-18T12:00:00.000Z"
+        }
+      ]
+    }
+  ]
+}"
+`;
+
+exports[`formatPolicySarif > renders multiple violations SARIF snapshot 1`] = `
+"{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "skills-check/policy",
+          "informationUri": "https://skillscheck.ai",
+          "rules": [
+            {
+              "id": "skills-check/policy/content.deny_patterns",
+              "shortDescription": {
+                "text": "content.deny_patterns"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "skills-check/policy/content.require_patterns",
+              "shortDescription": {
+                "text": "content.require_patterns"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "skills-check/policy/content.deny_patterns",
+          "level": "warning",
+          "message": {
+            "text": "Contains denied pattern: exec"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "skills/internal/deploy/SKILL.md"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "properties": {
+            "severity": "violation",
+            "detail": "Runtime shell execution is not allowed."
+          }
+        },
+        {
+          "ruleId": "skills-check/policy/content.require_patterns",
+          "level": "warning",
+          "message": {
+            "text": "Missing required pattern: rollback"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "skills/internal/deploy/SKILL.md"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "severity": "violation",
+            "detail": "Deployment skills must document rollback steps."
+          }
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "endTimeUtc": "2026-04-18T12:00:00.000Z"
+        }
+      ]
+    }
+  ]
+}"
+`;

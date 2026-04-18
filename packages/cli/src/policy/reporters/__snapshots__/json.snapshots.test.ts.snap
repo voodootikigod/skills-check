@@ -1,0 +1,100 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatPolicyJson snapshots > renders clean output 1`] = `
+"{
+  "policyFile": ".skill-policy.yml",
+  "files": 2,
+  "findings": [],
+  "required": [
+    {
+      "skill": "security-review",
+      "satisfied": true
+    }
+  ],
+  "summary": {
+    "blocked": 0,
+    "violations": 0,
+    "warnings": 0
+  },
+  "generatedAt": "2026-04-18T12:00:00.000Z",
+  "exemptedViolations": [],
+  "exemptions": []
+}"
+`;
+
+exports[`formatPolicyJson snapshots > renders mixed severities 1`] = `
+"{
+  "policyFile": ".skill-policy.yml",
+  "files": 2,
+  "findings": [
+    {
+      "file": "skills/vendor/rogue/SKILL.md",
+      "severity": "blocked",
+      "rule": "sources.deny",
+      "message": "Source \\"evil/skills\\" is in the deny list"
+    },
+    {
+      "file": "skills/internal/deploy/SKILL.md",
+      "severity": "violation",
+      "rule": "content.deny_patterns",
+      "message": "Contains denied pattern: exec",
+      "detail": "Runtime shell execution is not allowed.",
+      "line": 14
+    },
+    {
+      "file": "skills/internal/legacy/SKILL.md",
+      "severity": "warning",
+      "rule": "freshness.max_age_days",
+      "message": "Last verified 142 days ago",
+      "detail": "Review the upstream changelog."
+    }
+  ],
+  "required": [
+    {
+      "skill": "incident-response",
+      "satisfied": false
+    }
+  ],
+  "summary": {
+    "blocked": 1,
+    "violations": 1,
+    "warnings": 1
+  },
+  "generatedAt": "2026-04-18T12:00:00.000Z",
+  "exemptedViolations": [],
+  "exemptions": []
+}"
+`;
+
+exports[`formatPolicyJson snapshots > renders multiple violations 1`] = `
+"{
+  "policyFile": ".skill-policy.yml",
+  "files": 2,
+  "findings": [
+    {
+      "file": "skills/internal/deploy/SKILL.md",
+      "severity": "violation",
+      "rule": "content.deny_patterns",
+      "message": "Contains denied pattern: exec",
+      "detail": "Runtime shell execution is not allowed.",
+      "line": 14
+    },
+    {
+      "file": "skills/internal/deploy/SKILL.md",
+      "severity": "violation",
+      "rule": "content.require_patterns",
+      "message": "Missing required pattern: rollback",
+      "detail": "Deployment skills must document rollback steps."
+    }
+  ],
+  "required": [],
+  "summary": {
+    "blocked": 0,
+    "violations": 2,
+    "warnings": 0
+  },
+  "generatedAt": "2026-04-18T12:00:00.000Z",
+  "exemptedViolations": [],
+  "exemptions": []
+}"
+`;

@@ -91,5 +91,23 @@ export function formatVerifyMarkdown(report: VerifyReport): string {
 		lines.push(...formatResult(result));
 	}
 
+	if (report.integrity) {
+		lines.push("## Integrity");
+		lines.push("");
+		if (!report.integrity.lockFound) {
+			lines.push("skills-lock.json not found.");
+			lines.push("");
+		} else {
+			lines.push("| Skill | Status | Field | Expected | Actual |");
+			lines.push("|-------|--------|-------|----------|--------|");
+			for (const result of report.integrity.results) {
+				lines.push(
+					`| ${result.skill} | ${result.status} | ${result.field ?? ""} | ${result.expected ?? ""} | ${result.actual ?? ""} |`
+				);
+			}
+			lines.push("");
+		}
+	}
+
 	return lines.join("\n");
 }

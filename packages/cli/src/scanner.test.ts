@@ -1,6 +1,49 @@
-import { describe, expect, it } from "vitest";
-import { groupSkills } from "./scanner.js";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { groupSkills, scanSkills } from "./scanner.js";
 import type { ScannedSkill } from "./types.js";
+
+describe("scanSkills", () => {
+	let tempDir: string;
+
+	beforeEach(async () => {
+		tempDir = await mkdtemp(join(tmpdir(), "skills-check-scanner-"));
+	});
+
+	afterEach(async () => {
+		await rm(tempDir, { recursive: true, force: true });
+	});
+
+	it("parses deprecated frontmatter", async () => {
+		const skillDir = join(tempDir, "old-skill");
+		await mkdir(skillDir, { recursive: true });
+		await writeFile(
+			join(skillDir, "SKILL.md"),
+			`---
+name: old-skill
+product-version: "1.0.0"
+deprecated: true
+deprecatedMessage: Use new-skill instead.
+---
+
+# Old Skill
+`,
+			"utf-8"
+		);
+
+		const skills = await scanSkills(tempDir);
+
+		expect(skills).toEqual([
+			expect.objectContaining({
+				name: "old-skill",
+				status: "deprecated",
+				deprecatedMessage: "Use new-skill instead.",
+			}),
+		]);
+	});
+});
 
 describe("groupSkills", () => {
 	it("groups skills with shared prefix and same version", () => {

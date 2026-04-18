@@ -1,7 +1,10 @@
+import { dirname } from "node:path";
 import { readFile } from "node:fs/promises";
 import matter from "gray-matter";
 import { major, minor, patch } from "semver";
 import { extractVersionedPackages, parseCompatibility } from "../compatibility/index.js";
+import { runFingerprint } from "../fingerprint/index.js";
+import { readLockFile, verifyIntegrity } from "../lockfile/index.js";
 import { normalizeVersion } from "../severity.js";
 import { discoverSkillFiles } from "../shared/discovery.js";
 import { readSkillFile } from "../skill-io.js";
@@ -70,6 +73,29 @@ function resolveVersion(parsed: matter.GrayMatterFile<string>): string | null {
 		return String(parsed.data["product-version"]);
 	}
 	return null;
+}
+
+function resolveIntegrityDir(skill?: string): string {
+	if (!skill) {
+		return ".";
+	}
+
+	return skill.endsWith(".md") ? dirname(dirname(skill)) : skill;
+}
+
+function summarizeIntegrity(results: ReturnType<typeof verifyIntegrity>): {
+	missing: number;
+	modified: number;
+	new: number;
+	ok: number;
+} {
+	return results.reduce(
+		(summary, result) => {
+			summary[result.status] += 1;
+			return summary;
+		},
+		{ ok: 0, modified: 0, missing: 0, new: 0 }
+	);
 }
 
 async function verifyPair(
@@ -154,6 +180,7 @@ async function verifyPair(
  */
 export async function runVerify(options: VerifyOptions): Promise<VerifyReport> {
 	const results: VerifyResult[] = [];
+	let integrity: VerifyReport["integrity"];
 
 	if (options.before && options.after) {
 		// Mode 1: Explicit path comparison
@@ -203,6 +230,18 @@ export async function runVerify(options: VerifyOptions): Promise<VerifyReport> {
 			const result = await verifyPair(previousContent, skillFile.raw, filePath, options);
 			results.push(result);
 		}
+
+		if (options.checkIntegrity) {
+			const fingerprintRegistry = await runFingerprint(files.length > 0 ? files : [dir]);
+			const lock = readLockFile(resolveIntegrityDir(options.skill));
+			const integrityResults = lock ? verifyIntegrity(lock, fingerprintRegistry) : [];
+
+			integrity = {
+				lockFound: lock !== null,
+				results: integrityResults,
+				summary: summarizeIntegrity(integrityResults),
+			};
+		}
 	}
 
 	const passed = results.filter((r) => r.match).length;
@@ -210,6 +249,7 @@ export async function runVerify(options: VerifyOptions): Promise<VerifyReport> {
 	const skipped = results.filter((r) => !r.match && r.declaredBump === null).length;
 
 	return {
+		integrity,
 		results,
 		summary: { passed, failed, skipped },
 		generatedAt: new Date().toISOString(),

@@ -1,4 +1,6 @@
 import chalk from "chalk";
+import { runFingerprint } from "../fingerprint/index.js";
+import { diffLockFiles, readLockFile, synchronizeLockFile } from "../lockfile/index.js";
 import { fetchLatestVersions } from "../npm.js";
 import { loadRegistry } from "../registry.js";
 import { getSeverity, normalizeVersion } from "../severity.js";
@@ -14,6 +16,7 @@ interface ReportOptions {
  */
 export async function reportCommand(options: ReportOptions): Promise<number> {
 	const registry = await loadRegistry(options.registry);
+	const skillsDir = registry.skillsDir ?? ".";
 	const productEntries = Object.entries(registry.products);
 
 	// Fetch all latest versions in parallel
@@ -63,6 +66,7 @@ export async function reportCommand(options: ReportOptions): Promise<number> {
 	const stale = results.filter((r) => r.stale);
 	const current = results.filter((r) => !r.stale);
 	const now = new Date().toISOString().split("T")[0];
+	const lockFile = readLockFile(skillsDir);
 
 	const lines: string[] = [];
 	lines.push("# Skills Check Report");
@@ -75,6 +79,34 @@ export async function reportCommand(options: ReportOptions): Promise<number> {
 	lines.push(`- **Stale**: ${stale.length}`);
 	lines.push(`- **Current**: ${current.length}`);
 	lines.push("");
+
+	lines.push("## Lock File Drift");
+	lines.push("");
+
+	if (!lockFile) {
+		lines.push(`- No ${skillsDir}/skills-lock.json found.`);
+		lines.push("");
+	} else {
+		const fingerprintRegistry = await runFingerprint([skillsDir]);
+		const nextLock = synchronizeLockFile(lockFile, fingerprintRegistry);
+		const diff = diffLockFiles(lockFile, nextLock);
+
+		if (diff.added.length === 0 && diff.removed.length === 0 && diff.changed.length === 0) {
+			lines.push("- No lock file drift detected.");
+			lines.push("");
+		} else {
+			if (diff.added.length > 0) {
+				lines.push(`- Added: ${diff.added.join(", ")}`);
+			}
+			if (diff.removed.length > 0) {
+				lines.push(`- Removed: ${diff.removed.join(", ")}`);
+			}
+			for (const change of diff.changed) {
+				lines.push(`- Changed ${change.name}.${change.field}: ${change.from} → ${change.to}`);
+			}
+			lines.push("");
+		}
+	}
 
 	if (stale.length > 0) {
 		lines.push("## Stale Products");

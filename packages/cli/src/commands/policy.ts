@@ -17,6 +17,7 @@ interface PolicyCheckCommandOptions {
 	output?: string;
 	policy?: string;
 	quiet?: boolean;
+	showExemptions?: boolean;
 	skill?: string;
 	verbose?: boolean;
 }
@@ -85,6 +86,7 @@ export async function policyCheckCommand(
 		format: options.format,
 		output: options.output,
 		failOn,
+		showExemptions: options.showExemptions,
 	};
 
 	const report = await runPolicyCheck([dir], policy, policyPath, policyOptions);

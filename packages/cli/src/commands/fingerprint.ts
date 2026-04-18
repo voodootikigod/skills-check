@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import type { FingerprintOptions } from "../fingerprint/index.js";
 import { runFingerprint } from "../fingerprint/index.js";
+import { readLockFile, synchronizeLockFile, writeLockFile } from "../lockfile/index.js";
 import { formatAndOutput } from "../shared/index.js";
 
 interface FingerprintCommandOptions {
@@ -71,6 +72,20 @@ export async function fingerprintCommand(
 	};
 
 	const registry = await runFingerprint([dir], fpOptions);
+
+	try {
+		const nextLock = synchronizeLockFile(readLockFile(dir), registry);
+		writeLockFile(dir, nextLock);
+	} catch (error) {
+		console.error(
+			chalk.yellow(
+				`Warning: failed to update lock file: ${error instanceof Error ? error.message : String(error)}`
+			)
+		);
+		if (options.ci) {
+			return 2;
+		}
+	}
 
 	const format = options.json ? "json" : (options.format ?? "terminal");
 	await formatAndOutput(
