@@ -1154,7 +1154,10 @@ jobs:
 						<p>
 							These commands operate entirely on local files with no network access or code
 							execution: <code>init</code>, <code>lint</code>, <code>budget</code>,{" "}
-							<code>verify</code>, <code>fingerprint</code>, <code>policy</code>.
+							<code>verify</code>, <code>fingerprint</code>. The <code>policy</code> command
+							is local-only by default, but makes network requests when{" "}
+							<code>audit.require_clean</code> is configured in{" "}
+							<code>.skill-policy.yml</code> (it delegates to the audit pipeline).
 						</p>
 
 						<h3>Network requests</h3>

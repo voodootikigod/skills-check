@@ -768,7 +768,7 @@ For simpler setups, run individual commands directly:
 
 Not all commands carry the same risk profile. Understanding which commands are local-only versus which make network requests or execute external code helps you configure CI permissions and sandboxing appropriately.
 
-**Local-only and deterministic:** `init`, `lint`, `budget`, `verify`, `fingerprint`, `policy` — operate entirely on local files with no network access or code execution.
+**Local-only and deterministic:** `init`, `lint`, `budget`, `verify`, `fingerprint` — operate entirely on local files with no network access or code execution. `policy` is local-only by default, but makes network requests when `audit.require_clean` is configured in `.skill-policy.yml` (it delegates to the audit pipeline).
 
 **Network requests:**
 
