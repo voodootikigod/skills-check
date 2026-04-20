@@ -1,18 +1,18 @@
 import { createRequire } from "node:module";
 import { Command } from "commander";
-import { auditCommand } from "./commands/audit.js";
-import { budgetCommand } from "./commands/budget.js";
-import { checkCommand } from "./commands/check.js";
-import { fingerprintCommand } from "./commands/fingerprint.js";
-import { healthCommand } from "./commands/health.js";
-import { initCommand } from "./commands/init.js";
-import { lintCommand } from "./commands/lint.js";
-import { policyCheckCommand, policyInitCommand, policyValidateCommand } from "./commands/policy.js";
-import { refreshCommand } from "./commands/refresh.js";
-import { reportCommand } from "./commands/report.js";
-import { testCommand } from "./commands/test.js";
-import { usageCommand } from "./commands/usage.js";
-import { verifyCommand } from "./commands/verify.js";
+import { auditCommand } from "./commands/audit.ts";
+import { budgetCommand } from "./commands/budget.ts";
+import { checkCommand } from "./commands/check.ts";
+import { fingerprintCommand } from "./commands/fingerprint.ts";
+import { healthCommand } from "./commands/health.ts";
+import { initCommand } from "./commands/init.ts";
+import { lintCommand } from "./commands/lint.ts";
+import { policyCheckCommand, policyInitCommand, policyValidateCommand } from "./commands/policy.ts";
+import { refreshCommand } from "./commands/refresh.ts";
+import { reportCommand } from "./commands/report.ts";
+import { testCommand } from "./commands/test.ts";
+import { usageCommand } from "./commands/usage.ts";
+import { verifyCommand } from "./commands/verify.ts";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json") as { version: string };
@@ -333,6 +333,38 @@ program
 	.action(async (options) => {
 		try {
 			const code = await usageCommand(options);
+			process.exit(code);
+		} catch (error) {
+			console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+			process.exit(2);
+		}
+	});
+
+program
+	.command("fix [dir]")
+	.description("apply deterministic autofixes to skill files")
+	.option("--write", "apply fixes (default is dry-run)")
+	.option("--format <format>", "output format: terminal, json", "terminal")
+	.action(async (dir, options) => {
+		try {
+			const { fixCommand } = await import("./commands/fix.ts");
+			const code = await fixCommand(dir ?? ".", options);
+			process.exit(code);
+		} catch (error) {
+			console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+			process.exit(2);
+		}
+	});
+
+program
+	.command("doctor")
+	.description("validate environment prerequisites and release readiness")
+	.option("--format <format>", "output format: terminal, json", "terminal")
+	.option("--ci", "exit with non-zero code on errors")
+	.action(async (options) => {
+		try {
+			const { doctorCommand } = await import("./commands/doctor.ts");
+			const code = await doctorCommand(options);
 			process.exit(code);
 		} catch (error) {
 			console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
