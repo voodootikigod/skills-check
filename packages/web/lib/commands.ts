@@ -607,6 +607,89 @@ export const commands: CommandInfo[] = [
 		ciTip:
 			"Run init once locally, then commit skills-check.json to your repo. Other commands will find it automatically.",
 	},
+	{
+		slug: "doctor",
+		name: "doctor",
+		icon: "\u2695",
+		tagline: "Validate environment prerequisites and release readiness.",
+		group: "Diagnostics & Maintenance",
+		description:
+			"A diagnostic command that checks your environment for everything skills-check needs: Node version, package manager, registry reachability, isolation runtimes, LLM provider configuration, and project setup.",
+		whyItMatters:
+			"Missing prerequisites cause confusing errors deep in a workflow. Doctor surfaces setup problems upfront — wrong Node version, missing pnpm, unreachable registry, no isolation runtime, missing API keys — before they block your work.",
+		whatItDoes: [
+			"Checks Node.js version against the >=22 requirement",
+			"Detects pnpm availability and lockfile consistency",
+			"Tests npm registry reachability with a 5-second timeout",
+			"Probes available isolation runtimes (Docker, Podman, OrbStack, Apple Containers, Vercel Sandbox)",
+			"Checks for LLM provider API keys (Anthropic, OpenAI, Google)",
+			"Verifies skills-check.json registry file exists in the current directory",
+		],
+		usage: "npx skills-check doctor [options]",
+		options: [
+			{ flag: "--format <type>", description: "Output format: terminal or json" },
+			{ flag: "--ci", description: "CI mode — exit non-zero on errors" },
+		],
+		examples: [
+			{ label: "Check environment", code: "npx skills-check doctor" },
+			{ label: "JSON output", code: "npx skills-check doctor --format json" },
+			{ label: "CI gate", code: "npx skills-check doctor --ci" },
+		],
+		whenToUse: [
+			"When setting up skills-check for the first time",
+			"When commands fail with unexpected errors",
+			"In CI to validate runner prerequisites",
+		],
+		relatedCommands: [
+			{ slug: "init", relationship: "Validate environment, then initialize registry" },
+		],
+		ciTip:
+			"Run doctor --ci as the first step in your pipeline to catch environment issues before any other commands run.",
+	},
+	{
+		slug: "fix",
+		name: "fix",
+		icon: "\u2692",
+		tagline: "Apply deterministic, non-LLM autofixes to skill files.",
+		group: "Diagnostics & Maintenance",
+		description:
+			"Automatically normalize and repair skill files using deterministic transforms — no LLM required. Fixes missing frontmatter fields, migrates deprecated product-version to compatibility, and normalizes formatting.",
+		whyItMatters:
+			"There's a gap between detecting issues (via lint) and AI-assisted updates (via refresh). Fix fills that gap with safe, predictable transforms that you can trust in CI — frontmatter normalization, compatibility migration, and format cleanup without any LLM involvement.",
+		whatItDoes: [
+			"Adds missing required frontmatter fields (name from filename, description placeholder)",
+			"Populates author from git config when missing",
+			"Migrates deprecated product-version field to the spec-native compatibility format",
+			"Trims trailing whitespace from all lines",
+			"Ensures files end with a single newline",
+			"Dry-run by default — shows proposed changes without writing",
+		],
+		usage: "npx skills-check fix [dir] [options]",
+		options: [
+			{ flag: "--write", description: "Apply fixes (default is dry-run)" },
+			{ flag: "--format <type>", description: "Output format: terminal or json" },
+		],
+		examples: [
+			{ label: "Preview fixes", code: "npx skills-check fix" },
+			{ label: "Apply fixes", code: "npx skills-check fix --write" },
+			{ label: "Fix specific directory", code: "npx skills-check fix ./skills --write" },
+			{ label: "JSON output", code: "npx skills-check fix --format json" },
+		],
+		whenToUse: [
+			"After lint reports fixable issues",
+			"When migrating from product-version to compatibility",
+			"Before committing skills to normalize formatting",
+		],
+		relatedCommands: [
+			{ slug: "lint", relationship: "Detect issues, then fix them" },
+			{
+				slug: "refresh",
+				relationship: "Fix deterministic issues, then use AI for content updates",
+			},
+		],
+		ciTip:
+			"Run fix in dry-run mode in CI to detect unfixed issues. Use fix --write locally before committing.",
+	},
 ];
 
 export function getCommandBySlug(slug: string): CommandInfo | undefined {

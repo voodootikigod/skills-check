@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		title: "Skills Check — The missing quality toolkit for Agent Skills",
 		description:
-			"The missing quality toolkit for AI Agent Skills. 10 commands for freshness, security, quality, and efficiency.",
+			"The missing quality toolkit for AI Agent Skills. 14 commands for freshness, security, quality, and efficiency.",
 		url: "https://skillscheck.ai",
 		siteName: "Skills Check",
 		locale: "en_US",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 		title: "Skills Check — The missing quality toolkit for Agent Skills",
 		description:
-			"The missing quality toolkit for AI Agent Skills. 10 commands for freshness, security, quality, and efficiency.",
+			"The missing quality toolkit for AI Agent Skills. 14 commands for freshness, security, quality, and efficiency.",
 		creator: "@voodootikigod",
 	},
 	robots: {

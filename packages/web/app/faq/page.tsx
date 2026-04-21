@@ -182,7 +182,7 @@ const faqItems = [
 				a: (
 					<>
 						Add <code>uses: voodootikigod/skills-check@v1</code> to your workflow. The action
-						supports all 10 commands via the <code>commands</code> input (e.g.,{" "}
+						supports all 14 commands via the <code>commands</code> input (e.g.,{" "}
 						<code>commands: check,audit,lint,budget</code>) with per-command threshold inputs like{" "}
 						<code>audit-fail-on</code> and <code>budget-max-tokens</code>. See the{" "}
 						<Link href="/docs#ci">CI integration docs</Link> for full configuration.
@@ -236,7 +236,7 @@ const jsonLdAnswers: Record<string, string> = {
 	"How do I enforce skill quality in CI/CD?":
 		"Every skills-check command supports --ci mode for strict exit codes and --fail-on for configurable severity thresholds. Combine multiple commands in a pipeline — for example, run audit, lint, and budget together to gate pull requests on security, metadata quality, and token cost.",
 	"How do I use skills-check as a GitHub Action?":
-		"Add uses: voodootikigod/skills-check@v1 to your workflow. The action supports all 10 commands via the commands input (e.g., commands: check,audit,lint,budget) with per-command threshold inputs like audit-fail-on and budget-max-tokens. See the CI integration docs for full configuration.",
+		"Add uses: voodootikigod/skills-check@v1 to your workflow. The action supports all 14 commands via the commands input (e.g., commands: check,audit,lint,budget) with per-command threshold inputs like audit-fail-on and budget-max-tokens. See the CI integration docs for full configuration.",
 	"How do I set up policy enforcement for agent skills?":
 		"Create a .skill-policy.yml file to define organizational rules — trusted sources, banned patterns, required metadata, and staleness limits. Then run npx skills-check policy check to enforce them. The policy command supports CI mode and integrates with the audit command for comprehensive enforcement.",
 };

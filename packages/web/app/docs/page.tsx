@@ -7,7 +7,7 @@ import styles from "./docs.module.css";
 export const metadata: Metadata = {
 	title: "Docs",
 	description:
-		"CLI reference for skills-check: init, check, report, refresh, audit, lint, budget, verify, policy, test, fingerprint, and usage commands. Registry format, SKILL.md frontmatter spec, and CI integration guide.",
+		"CLI reference for skills-check: init, check, report, refresh, audit, lint, budget, verify, policy, test, fingerprint, usage, doctor, and fix commands. Registry format, SKILL.md frontmatter spec, and CI integration guide.",
 	alternates: {
 		canonical: "https://skillscheck.ai/docs",
 	},
@@ -18,7 +18,7 @@ const techArticleJsonLd = {
 	"@type": "TechArticle",
 	headline: "Skills Check Documentation",
 	description:
-		"Complete CLI reference for skills-check: init, check, report, refresh, audit, lint, budget, verify, policy, test, fingerprint, and usage commands. Registry format, SKILL.md frontmatter spec, and CI integration guide.",
+		"Complete CLI reference for skills-check: init, check, report, refresh, audit, lint, budget, verify, policy, test, fingerprint, usage, doctor, and fix commands. Registry format, SKILL.md frontmatter spec, and CI integration guide.",
 	url: "https://skillscheck.ai/docs",
 	author: { "@type": "Person", name: "Chris Williams" },
 };
@@ -40,9 +40,10 @@ export default function DocsPage() {
 						<h2 id="overview">Overview</h2>
 						<p>
 							<code>skills-check</code> is a quality & integrity layer for Agent Skills. It provides
-							12 commands covering freshness detection, security auditing, metadata linting, token
+							14 commands covering freshness detection, security auditing, metadata linting, token
 							budget analysis, semver verification, policy enforcement, eval testing, skill
-							fingerprinting, and usage analytics for your SKILL.md files.
+							fingerprinting, usage analytics, environment diagnostics, and deterministic autofixes
+							for your SKILL.md files.
 						</p>
 					</section>
 
@@ -73,7 +74,9 @@ export default function DocsPage() {
 							<a href="#cmd-policy">policy — enforce organizational rules</a> &middot;{" "}
 							<a href="#cmd-test">test — run eval test suites</a> &middot;{" "}
 							<a href="#cmd-fingerprint">fingerprint — generate skill identity hashes</a> &middot;{" "}
-							<a href="#cmd-usage">usage — analyze skill telemetry</a>
+							<a href="#cmd-usage">usage — analyze skill telemetry</a> &middot;{" "}
+							<a href="#cmd-doctor">doctor — validate environment prerequisites</a> &middot;{" "}
+							<a href="#cmd-fix">fix — deterministic autofixes</a>
 						</p>
 
 						<h3 id="cmd-init">
@@ -698,6 +701,101 @@ npx skills-check usage --store ./telemetry.jsonl --ci --fail-on high`}
 								</tr>
 							</tbody>
 						</table>
+
+						<h3 id="cmd-doctor">
+							<code>doctor</code>
+						</h3>
+						<p>
+							Validate environment prerequisites and release readiness. Checks Node version, package
+							manager, registry reachability, isolation runtimes, LLM provider configuration, and
+							project setup.
+						</p>
+						<pre>
+							<code>
+								{`# Check environment
+npx skills-check doctor
+
+# JSON output
+npx skills-check doctor --format json
+
+# CI gate
+npx skills-check doctor --ci`}
+							</code>
+						</pre>
+						<h4>Key options</h4>
+						<table>
+							<thead>
+								<tr>
+									<th>Option</th>
+									<th>Description</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>
+										<code>--format &lt;type&gt;</code>
+									</td>
+									<td>
+										Output format: <code>terminal</code> or <code>json</code>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<code>--ci</code>
+									</td>
+									<td>CI mode — exit non-zero on errors</td>
+								</tr>
+							</tbody>
+						</table>
+
+						<h3 id="cmd-fix">
+							<code>fix [dir]</code>
+						</h3>
+						<p>
+							Apply deterministic, non-LLM autofixes to skill files. Normalizes frontmatter,
+							migrates deprecated product-version to compatibility, and cleans up formatting.
+							Dry-run by default.
+						</p>
+						<pre>
+							<code>
+								{`# Preview fixes (dry-run)
+npx skills-check fix
+
+# Apply fixes
+npx skills-check fix --write
+
+# Fix specific directory
+npx skills-check fix ./skills --write
+
+# JSON output
+npx skills-check fix --format json`}
+							</code>
+						</pre>
+						<h4>Key options</h4>
+						<table>
+							<thead>
+								<tr>
+									<th>Option</th>
+									<th>Description</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>
+										<code>--write</code>
+									</td>
+									<td>Apply fixes (default is dry-run)</td>
+								</tr>
+								<tr>
+									<td>
+										<code>--format &lt;type&gt;</code>
+									</td>
+									<td>
+										Output format: <code>terminal</code> or <code>json</code>
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</section>
 
 					<section>
@@ -1154,10 +1252,10 @@ jobs:
 						<p>
 							These commands operate entirely on local files with no network access or code
 							execution: <code>init</code>, <code>lint</code>, <code>budget</code>,{" "}
-							<code>verify</code>, <code>fingerprint</code>. The <code>policy</code> command
-							is local-only by default, but makes network requests when{" "}
-							<code>audit.require_clean</code> is configured in{" "}
-							<code>.skill-policy.yml</code> (it delegates to the audit pipeline).
+							<code>verify</code>, <code>fingerprint</code>. The <code>policy</code> command is
+							local-only by default, but makes network requests when{" "}
+							<code>audit.require_clean</code> is configured in <code>.skill-policy.yml</code> (it
+							delegates to the audit pipeline).
 						</p>
 
 						<h3>Network requests</h3>

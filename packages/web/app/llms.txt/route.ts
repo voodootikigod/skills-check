@@ -7,7 +7,7 @@ export function GET() {
 
 > The missing quality toolkit for Agent Skills
 
-skills-check is the quality and integrity layer for Agent Skills (SKILL.md files). It provides 10 commands covering freshness detection, security auditing, metadata linting, token budget analysis, semver verification, policy enforcement, and eval testing. Agent Skills are markdown documents with YAML frontmatter that instruct AI coding agents (Claude Code, Cursor, Codex, etc.) how to work with specific products, frameworks, and patterns. skills-check ensures these instructions are correct, safe, current, and efficient.
+skills-check is the quality and integrity layer for Agent Skills (SKILL.md files). It provides 14 commands covering freshness detection, security auditing, metadata linting, token budget analysis, semver verification, policy enforcement, eval testing, environment diagnostics, deterministic autofixes, skill fingerprinting, and usage analytics. Agent Skills are markdown documents with YAML frontmatter that instruct AI coding agents (Claude Code, Cursor, Codex, etc.) how to work with specific products, frameworks, and patterns. skills-check ensures these instructions are correct, safe, current, and efficient.
 
 ## Commands
 

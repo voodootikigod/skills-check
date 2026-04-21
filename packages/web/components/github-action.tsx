@@ -29,7 +29,7 @@ export function GitHubAction() {
 					<div className={styles.badge}>GitHub Action</div>
 					<h2 className={styles.heading}>Run in CI, catch issues before merge</h2>
 					<p className={styles.subtitle}>
-						Add skills-check to any GitHub Actions workflow. All 10 commands available, with
+						Add skills-check to any GitHub Actions workflow. All 14 commands available, with
 						per-command thresholds, JSON outputs, and non-zero exit codes for CI gating.
 					</p>
 					<a
@@ -80,9 +80,10 @@ export function GitHubAction() {
 							</svg>
 						</div>
 						<div>
-							<h3 className={styles.featureTitle}>All 10 commands</h3>
+							<h3 className={styles.featureTitle}>All 14 commands</h3>
 							<p className={styles.featureDesc}>
-								check, audit, lint, budget, verify, test, policy, refresh, report, init
+								check, audit, lint, budget, verify, test, policy, refresh, report, init,
+								fingerprint, usage, doctor, fix
 							</p>
 						</div>
 					</div>

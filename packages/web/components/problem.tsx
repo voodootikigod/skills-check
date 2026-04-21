@@ -54,7 +54,7 @@ export function Problem() {
 						<div>
 							<h3 className={styles.pointTitle}>skills-check fixes this</h3>
 							<p className={styles.pointDescription}>
-								10 commands covering freshness, security, quality, token budgets, semver
+								14 commands covering freshness, security, quality, token budgets, semver
 								verification, and policy enforcement &mdash; everything you need to keep agent
 								skills correct, safe, and efficient.
 							</p>
