@@ -22,6 +22,6 @@
     "ts-json-schema-generator": "^2.3.0",
     "tsup": "^8.5.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.8.0"
+    "typescript": "^6.0.3"
   }
 }
