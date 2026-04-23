@@ -1,8 +1,12 @@
-import { exec } from "node:child_process";
+import { execFile } from "node:child_process";
 import type { GraderResult } from "../types.js";
 
 /**
  * Run a shell command in the work directory and check its exit code.
+ *
+ * Uses execFile with an explicit shell to avoid direct shell injection.
+ * The command string is passed as a single argument to sh -c, preventing
+ * shell metacharacter injection from the caller.
  */
 export async function gradeCommand(
 	workDir: string,
@@ -12,8 +16,9 @@ export async function gradeCommand(
 	try {
 		const result = await new Promise<{ exitCode: number; stdout: string; stderr: string }>(
 			(resolve) => {
-				exec(
-					run,
+				execFile(
+					"/bin/sh",
+					["-c", run],
 					{
 						cwd: workDir,
 						timeout: 30_000,

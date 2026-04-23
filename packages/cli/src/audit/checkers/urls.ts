@@ -3,7 +3,26 @@ import type { AuditChecker, AuditFinding, CheckContext, ExtractedUrl } from "../
 
 const CONCURRENCY_LIMIT = 5;
 const TIMEOUT_MS = 10_000;
+const DNS_TIMEOUT_MS = 5000;
 const PRIVATE_172_RE = /^172\.(1[6-9]|2\d|3[01])\./;
+
+function lookupWithTimeout(hostname: string, timeoutMs: number) {
+	return new Promise<Awaited<ReturnType<typeof lookup>>>((resolve, reject) => {
+		const timer = setTimeout(() => {
+			reject(new Error("DNS lookup timed out"));
+		}, timeoutMs);
+
+		lookup(hostname)
+			.then((result) => {
+				clearTimeout(timer);
+				resolve(result);
+			})
+			.catch((error) => {
+				clearTimeout(timer);
+				reject(error);
+			});
+	});
+}
 
 /**
  * Check if an IP address is private, loopback, link-local, or a cloud metadata endpoint.
@@ -27,8 +46,13 @@ function isPrivateIp(ip: string): boolean {
 	if (ip.startsWith("169.254.")) {
 		return true;
 	}
-	// IPv6 loopback and link-local
+	// IPv6 loopback, link-local, and unique local (ULA)
 	if (ip === "::1" || ip.startsWith("fe80:") || ip === "::") {
+		return true;
+	}
+	// IPv6 ULA (fc00::/7 = fc00:: through fdff::)
+	const lowerIp = ip.toLowerCase();
+	if (lowerIp.startsWith("fc") || lowerIp.startsWith("fd")) {
 		return true;
 	}
 	return false;
@@ -61,14 +85,14 @@ async function isSafeUrl(url: string): Promise<boolean> {
 			return false;
 		}
 
-		// Resolve DNS and check the IP
+		// Resolve DNS with timeout and check the IP
 		try {
-			const result = await lookup(hostname);
+			const result = await lookupWithTimeout(hostname, DNS_TIMEOUT_MS);
 			if (isPrivateIp(result.address)) {
 				return false;
 			}
 		} catch {
-			// DNS resolution failed — allow fetch to fail naturally
+			// DNS resolution failed or timed out — allow fetch to fail naturally
 		}
 
 		return true;

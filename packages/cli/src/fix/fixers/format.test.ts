@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixFormat } from "./format.ts";
+import { fixFormat } from "./format.js";
 
 const TRAILING_SPACE_RE = / +\n/;
 

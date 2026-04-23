@@ -2,8 +2,8 @@ import { execFile } from "node:child_process";
 import { basename } from "node:path";
 import { promisify } from "node:util";
 import matter from "gray-matter";
-import type { SkillFile } from "../../skill-io.ts";
-import type { FixResult } from "../types.ts";
+import type { SkillFile } from "../../skill-io.js";
+import type { FixResult } from "../types.js";
 
 function getExecFileAsync() {
 	return promisify(execFile);

@@ -474,6 +474,67 @@ skills-check usage --store file://telemetry.jsonl --markdown -o usage-report.md
 skills-check usage --store file://telemetry.jsonl --check-policy --ci --fail-on violation
 ```
 
+### `skills-check doctor`
+
+Validate environment prerequisites and release readiness.
+
+| Flag | Description |
+|------|-------------|
+| `--format <format>` | Output format: `terminal` or `json` (default: `terminal`) |
+| `--ci` | Exit with non-zero code on errors |
+
+```bash
+# Validate environment
+skills-check doctor
+
+# CI mode with JSON output
+skills-check doctor --format json --ci
+```
+
+### `skills-check fix [dir]`
+
+Apply deterministic autofixes to skill files.
+
+| Flag | Description |
+|------|-------------|
+| `--write` | Apply fixes (default is dry-run) |
+| `--format <format>` | Output format: `terminal` or `json` (default: `terminal`) |
+
+```bash
+# Dry-run fixes in current directory
+skills-check fix
+
+# Apply fixes to a specific directory
+skills-check fix ./skills --write
+```
+
+### `skills-check health [dir]`
+
+Run audit + lint + budget + policy as a single CI gate.
+
+| Flag | Description |
+|------|-------------|
+| `-f, --format <type>` | Output format: `terminal` or `json` (default: `terminal`) |
+| `-o, --output <path>` | Write report to file |
+| `--max-tokens <n>` | Budget threshold for token count |
+| `--skip-audit` | Skip audit check |
+| `--skip-lint` | Skip lint check |
+| `--skip-budget` | Skip budget check |
+| `--skip-policy` | Skip policy check |
+| `--verbose` | Show progress and details |
+| `--quiet` | Suppress output, exit code only |
+
+```bash
+# Run all health checks
+skills-check health
+
+# Run health checks with token budget limit
+skills-check health ./skills --max-tokens 50000
+
+# Quiet mode for CI
+skills-check health --quiet
+```
+
 ### `skills-check refresh [skills-dir]`
 
 Use an LLM to propose targeted updates to stale skill files. Fetches changelogs, generates diffs, and optionally applies changes.

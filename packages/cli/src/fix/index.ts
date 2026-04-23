@@ -1,11 +1,11 @@
 import { stat } from "node:fs/promises";
 import matter from "gray-matter";
-import { discoverSkillFiles } from "../shared/discovery.ts";
-import { readSkillFile, writeSkillFile } from "../skill-io.ts";
-import { fixCompatibility } from "./fixers/compatibility.ts";
-import { fixFormat } from "./fixers/format.ts";
-import { fixFrontmatter } from "./fixers/frontmatter.ts";
-import type { FileFixResult, FixOptions, FixReport, FixResult } from "./types.ts";
+import { discoverSkillFiles } from "../shared/discovery.js";
+import { readSkillFile, writeSkillFile } from "../skill-io.js";
+import { fixCompatibility } from "./fixers/compatibility.js";
+import { fixFormat } from "./fixers/format.js";
+import { fixFrontmatter } from "./fixers/frontmatter.js";
+import type { FileFixResult, FixOptions, FixReport, FixResult } from "./types.js";
 
 /**
  * Extract frontmatter from content string (helper for re-parsing after modifications).

@@ -1,8 +1,8 @@
-import { runDoctor } from "../doctor/index.ts";
-import { formatDoctorJson } from "../doctor/reporters/json.ts";
-import { formatDoctorTerminal } from "../doctor/reporters/terminal.ts";
-import type { DoctorOptions } from "../doctor/types.ts";
-import { formatAndOutput } from "../shared/index.ts";
+import { runDoctor } from "../doctor/index.js";
+import { formatDoctorJson } from "../doctor/reporters/json.js";
+import { formatDoctorTerminal } from "../doctor/reporters/terminal.js";
+import type { DoctorOptions } from "../doctor/types.js";
+import { formatAndOutput } from "../shared/index.js";
 
 interface DoctorCommandOptions {
 	ci?: boolean;

@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { CheckCategory, DoctorCheck, DoctorReport } from "../types.ts";
+import type { CheckCategory, DoctorCheck, DoctorReport } from "../types.js";
 
 const CATEGORY_LABELS: Record<CheckCategory, string> = {
 	environment: "Environment",

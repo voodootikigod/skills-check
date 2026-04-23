@@ -157,8 +157,13 @@ runs:
       run: |
         if [ -n "$INPUT_COMMANDS" ]; then
           # Parse comma-separated list into individual flags
+          ALLOWED="check audit lint budget policy verify test fingerprint usage"
           for CMD in $(echo "$INPUT_COMMANDS" | tr ',' ' '); do
             CMD=$(echo "$CMD" | xargs)  # trim whitespace
+            if ! echo "$ALLOWED" | grep -qw "$CMD"; then
+              echo "::error::Invalid command: $CMD. Allowed: $ALLOWED"
+              exit 2
+            fi
             echo "run_${CMD}=true" >> "$GITHUB_OUTPUT"
           done
         else

@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { FixReport } from "../types.ts";
+import type { FixReport } from "../types.js";
 
 export function formatFixTerminal(report: FixReport): string {
 	const lines: string[] = [];

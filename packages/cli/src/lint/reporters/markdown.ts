@@ -1,13 +1,17 @@
 import type { LintFinding, LintReport } from "../types.js";
 
-function groupByFile(findings: LintFinding[]): Map<string, LintFinding[]> {
-	const groups = new Map<string, LintFinding[]>();
-	for (const f of findings) {
-		const existing = groups.get(f.file) ?? [];
-		existing.push(f);
-		groups.set(f.file, existing);
+function groupByLevel(findings: LintFinding[]): Map<LintFinding["level"], LintFinding[]> {
+	const groups = new Map<LintFinding["level"], LintFinding[]>();
+	for (const finding of findings) {
+		const existing = groups.get(finding.level) ?? [];
+		existing.push(finding);
+		groups.set(finding.level, existing);
 	}
 	return groups;
+}
+
+function escapeCell(value: string): string {
+	return value.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 }
 
 export function formatLintMarkdown(report: LintReport): string {
@@ -19,13 +23,12 @@ export function formatLintMarkdown(report: LintReport): string {
 	lines.push(`Generated: ${now}`);
 	lines.push("");
 
-	// Summary table
 	lines.push("## Summary");
 	lines.push("");
 	lines.push("| Level | Count |");
 	lines.push("|-------|-------|");
-	lines.push(`| Errors | ${report.errors} |`);
-	lines.push(`| Warnings | ${report.warnings} |`);
+	lines.push(`| Error | ${report.errors} |`);
+	lines.push(`| Warning | ${report.warnings} |`);
 	lines.push(`| Info | ${report.infos} |`);
 	if (report.fixed > 0) {
 		lines.push(`| Fixed | ${report.fixed} |`);
@@ -41,25 +44,30 @@ export function formatLintMarkdown(report: LintReport): string {
 		return lines.join("\n");
 	}
 
-	// Findings by file
-	const grouped = groupByFile(report.findings);
-	const levelOrder: Record<string, number> = { error: 0, warning: 1, info: 2 };
+	const levelOrder: LintFinding["level"][] = ["error", "warning", "info"];
+	const grouped = groupByLevel(report.findings);
 
-	for (const [file, findings] of grouped) {
-		lines.push(`## ${file}`);
+	for (const level of levelOrder) {
+		const findings = grouped.get(level);
+		if (!findings || findings.length === 0) {
+			continue;
+		}
+
+		lines.push(`## ${level.charAt(0).toUpperCase() + level.slice(1)} (${findings.length})`);
 		lines.push("");
-		lines.push("| Level | Field | Message | Fixable |");
-		lines.push("|-------|-------|---------|---------|");
+		lines.push("| File | Field | Message | Fixable |");
+		lines.push("|------|-------|---------|---------|");
 
-		findings.sort(
-			(a, b) =>
-				(levelOrder[a.level] ?? 2) - (levelOrder[b.level] ?? 2) || a.field.localeCompare(b.field)
-		);
-
-		for (const f of findings) {
-			const escapedMessage = f.message.replace(/\|/g, "\\|");
-			const fixable = f.fixable ? "Yes" : "No";
-			lines.push(`| ${f.level} | ${f.field} | ${escapedMessage} | ${fixable} |`);
+		for (const finding of [...findings].sort((a, b) => {
+			const fileComparison = a.file.localeCompare(b.file);
+			if (fileComparison !== 0) {
+				return fileComparison;
+			}
+			return a.field.localeCompare(b.field);
+		})) {
+			lines.push(
+				`| ${escapeCell(finding.file)} | ${escapeCell(finding.field)} | ${escapeCell(finding.message)} | ${finding.fixable ? "Yes" : "No"} |`
+			);
 		}
 
 		lines.push("");

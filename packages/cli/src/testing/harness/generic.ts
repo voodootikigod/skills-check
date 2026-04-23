@@ -47,9 +47,7 @@ export function parseCommandTemplate(template: string): { cmd: string; argTempla
 	let current = "";
 	let inQuote: string | null = null;
 
-	for (let i = 0; i < template.length; i++) {
-		const ch = template[i];
-
+	for (const ch of template) {
 		if (inQuote) {
 			if (ch === inQuote) {
 				inQuote = null;

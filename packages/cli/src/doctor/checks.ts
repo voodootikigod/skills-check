@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
-import type { CheckCategory, DoctorCheck } from "./types.ts";
+import type { CheckCategory, DoctorCheck } from "./types.js";
 
 function getExecFileAsync() {
 	return promisify(execFile);
@@ -100,7 +100,7 @@ export async function checkIsolationRuntimes(): Promise<DoctorCheck[]> {
 
 	// OCI runtimes (Docker, Podman, etc.)
 	try {
-		const { detectOCIRuntime } = await import("../isolation/providers/oci.ts");
+		const { detectOCIRuntime } = await import("../isolation/providers/oci.js");
 		const runtime = await detectOCIRuntime();
 		if (runtime) {
 			results.push(
@@ -115,7 +115,7 @@ export async function checkIsolationRuntimes(): Promise<DoctorCheck[]> {
 
 	// Apple Containers
 	try {
-		const { AppleContainerProvider } = await import("../isolation/providers/apple.ts");
+		const { AppleContainerProvider } = await import("../isolation/providers/apple.js");
 		const apple = new AppleContainerProvider();
 		if (await apple.available()) {
 			results.push(check("isolation", "Apple Containers", "pass", "Apple Containers available"));
@@ -130,7 +130,7 @@ export async function checkIsolationRuntimes(): Promise<DoctorCheck[]> {
 
 	// Vercel Sandbox
 	try {
-		const { VercelSandboxProvider } = await import("../isolation/providers/vercel.ts");
+		const { VercelSandboxProvider } = await import("../isolation/providers/vercel.js");
 		const vercel = new VercelSandboxProvider();
 		if (await vercel.available()) {
 			results.push(check("isolation", "Vercel Sandbox", "pass", "Vercel Sandbox configured"));

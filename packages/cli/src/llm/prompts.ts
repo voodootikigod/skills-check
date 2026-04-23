@@ -23,6 +23,25 @@ Given a SKILL.md file and information about a version update, produce an updated
 }
 
 /**
+ * Use a fence longer than any backtick run in the untrusted content so the
+ * content can be embedded verbatim without terminating the wrapper block.
+ */
+function getCodeFence(content: string): string {
+	const matches = content.match(/`+/g);
+	const longestRun = matches ? Math.max(...matches.map((match) => match.length)) : 0;
+	return "`".repeat(Math.max(4, longestRun + 1));
+}
+
+function formatUntrustedMarkdownBlock(label: string, content: string): string {
+	const fence = getCodeFence(content);
+	return `<!-- ${label}_START -->
+${fence}markdown
+${content}
+${fence}
+<!-- ${label}_END -->`;
+}
+
+/**
  * Build the user prompt for a specific skill file refresh.
  */
 export function buildUserPrompt(params: {
@@ -33,7 +52,7 @@ export function buildUserPrompt(params: {
 	changelog: string | null;
 }): string {
 	const changelogSection = params.changelog
-		? `## Changelog (${params.fromVersion} → ${params.toVersion})\n\n${params.changelog}`
+		? `## Changelog (${params.fromVersion} → ${params.toVersion})\n\n${formatUntrustedMarkdownBlock("CHANGELOG", params.changelog)}`
 		: "## Changelog\n\nNo changelog available. Apply the version bump and only make changes you are confident about.";
 
 	return `## Product
@@ -46,9 +65,7 @@ ${changelogSection}
 
 ## Current SKILL.md Content
 
-\`\`\`markdown
-${params.skillContent}
-\`\`\`
+${formatUntrustedMarkdownBlock("SKILL_CONTENT", params.skillContent)}
 
 Update this skill file to reflect the version change from ${params.fromVersion} to ${params.toVersion}. Return the full updated content.`;
 }

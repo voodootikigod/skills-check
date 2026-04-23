@@ -1,6 +1,6 @@
 import matter from "gray-matter";
-import type { SkillFile } from "../../skill-io.ts";
-import type { FixResult } from "../types.ts";
+import type { SkillFile } from "../../skill-io.js";
+import type { FixResult } from "../types.js";
 
 /**
  * Migrate `product-version` to `compatibility` if the skill has `product-version`

@@ -1,59 +1,34 @@
 import type { VerifyReport, VerifyResult } from "../types.js";
 
-function formatResult(result: VerifyResult): string[] {
-	const lines: string[] = [];
-	const icon = result.match ? "PASS" : "FAIL";
+type VerifyStatus = "failed" | "passed" | "skipped";
 
-	lines.push(`### ${result.skill} [${icon}]`);
-	lines.push("");
-
-	if (result.declaredBump) {
-		lines.push(
-			`**Declared change:** ${result.declaredBefore ?? "?"} -> ${result.declaredAfter ?? "?"} (${result.declaredBump})`
-		);
-	} else {
-		lines.push("*No previous version for comparison*");
+function getStatus(result: VerifyResult): VerifyStatus {
+	if (result.declaredBump === null) {
+		return "skipped";
 	}
-	lines.push("");
+	return result.match ? "passed" : "failed";
+}
 
-	if (result.signals.length > 0) {
-		lines.push("**Content analysis:**");
-		lines.push("");
-		lines.push("| Signal | Confidence | Bump | Source |");
-		lines.push("|--------|------------|------|--------|");
-
-		for (const signal of result.signals) {
-			const conf = `${(signal.confidence * 100).toFixed(0)}%`;
-			const reason = signal.reason.replace(/\|/g, "\\|");
-			lines.push(`| ${reason} | ${conf} | ${signal.type} | ${signal.source} |`);
-		}
-		lines.push("");
+function groupByStatus(results: VerifyResult[]): Map<VerifyStatus, VerifyResult[]> {
+	const groups = new Map<VerifyStatus, VerifyResult[]>();
+	for (const result of results) {
+		const status = getStatus(result);
+		const existing = groups.get(status) ?? [];
+		existing.push(result);
+		groups.set(status, existing);
 	}
+	return groups;
+}
 
-	if (result.declaredBump) {
-		if (result.match) {
-			lines.push(`**Assessment:** ${result.assessedBump.toUpperCase()} bump is appropriate`);
-		} else {
-			lines.push(
-				`**Assessment:** ${result.declaredBump.toUpperCase()} bump appears ${result.assessedBump > result.declaredBump ? "INSUFFICIENT" : "EXCESSIVE"}. Recommended: ${result.assessedBump}`
-			);
-		}
-	} else {
-		lines.push(`**Suggested bump:** ${result.assessedBump}`);
+function escapeCell(value: string): string {
+	return value.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+}
+
+function formatDeclaredChange(result: VerifyResult): string {
+	if (result.declaredBump === null) {
+		return "—";
 	}
-
-	if (result.explanation) {
-		lines.push("");
-		lines.push(`> ${result.explanation}`);
-	}
-
-	if (result.llmUsed) {
-		lines.push("");
-		lines.push("*LLM-assisted analysis*");
-	}
-
-	lines.push("");
-	return lines;
+	return `${result.declaredBefore ?? "?"} → ${result.declaredAfter ?? "?"} (${result.declaredBump})`;
 }
 
 export function formatVerifyMarkdown(report: VerifyReport): string {
@@ -65,7 +40,6 @@ export function formatVerifyMarkdown(report: VerifyReport): string {
 	lines.push(`Generated: ${now}`);
 	lines.push("");
 
-	// Summary table
 	lines.push("## Summary");
 	lines.push("");
 	lines.push("| Status | Count |");
@@ -73,8 +47,9 @@ export function formatVerifyMarkdown(report: VerifyReport): string {
 	lines.push(`| Passed | ${report.summary.passed} |`);
 	lines.push(`| Failed | ${report.summary.failed} |`);
 	lines.push(`| Skipped | ${report.summary.skipped} |`);
-	const total = report.summary.passed + report.summary.failed + report.summary.skipped;
-	lines.push(`| **Total** | **${total}** |`);
+	lines.push(
+		`| **Total** | **${report.summary.passed + report.summary.failed + report.summary.skipped}** |`
+	);
 	lines.push("");
 
 	if (report.results.length === 0) {
@@ -83,12 +58,27 @@ export function formatVerifyMarkdown(report: VerifyReport): string {
 		return lines.join("\n");
 	}
 
-	// Results
-	lines.push("## Results");
-	lines.push("");
+	const statusOrder: VerifyStatus[] = ["failed", "passed", "skipped"];
+	const grouped = groupByStatus(report.results);
 
-	for (const result of report.results) {
-		lines.push(...formatResult(result));
+	for (const status of statusOrder) {
+		const results = grouped.get(status);
+		if (!results || results.length === 0) {
+			continue;
+		}
+
+		lines.push(`## ${status.charAt(0).toUpperCase() + status.slice(1)} (${results.length})`);
+		lines.push("");
+		lines.push("| Skill | File | Declared Change | Assessed Bump | LLM | Explanation |");
+		lines.push("|-------|------|-----------------|---------------|-----|-------------|");
+
+		for (const result of [...results].sort((a, b) => a.file.localeCompare(b.file))) {
+			lines.push(
+				`| ${escapeCell(result.skill)} | ${escapeCell(result.file)} | ${escapeCell(formatDeclaredChange(result))} | ${result.assessedBump} | ${result.llmUsed ? "Yes" : "No"} | ${escapeCell(result.explanation)} |`
+			);
+		}
+
+		lines.push("");
 	}
 
 	return lines.join("\n");

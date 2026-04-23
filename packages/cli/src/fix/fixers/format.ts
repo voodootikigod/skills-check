@@ -1,4 +1,4 @@
-import type { FixResult } from "../types.ts";
+import type { FixResult } from "../types.js";
 
 const TRAILING_NEWLINES_RE = /\n+$/;
 
