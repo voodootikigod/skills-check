@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { CheckContext, ExtractedPackage } from "../types.ts";
-import { advisoryChecker } from "./advisory.ts";
+import type { CheckContext, ExtractedPackage } from "../types.js";
+import { advisoryChecker } from "./advisory.js";
 
 function makeContext(packages: ExtractedPackage[]): CheckContext {
 	return {

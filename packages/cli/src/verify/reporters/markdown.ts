@@ -21,7 +21,7 @@ function groupByStatus(results: VerifyResult[]): Map<VerifyStatus, VerifyResult[
 }
 
 function escapeCell(value: string): string {
-	return value.replace(/\|/g, "\\|");
+	return value.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 }
 
 function formatDeclaredChange(result: VerifyResult): string {

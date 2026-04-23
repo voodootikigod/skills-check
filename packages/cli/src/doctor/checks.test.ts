@@ -32,7 +32,7 @@ vi.mock("../isolation/providers/vercel.js", () => ({
 
 import { execFile } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
-import { detectOCIRuntime } from "../isolation/providers/oci.ts";
+import { detectOCIRuntime } from "../isolation/providers/oci.js";
 import {
 	checkIsolationRuntimes,
 	checkLLMProviders,
@@ -41,7 +41,7 @@ import {
 	checkPnpm,
 	checkRegistry,
 	checkRegistryFile,
-} from "./checks.ts";
+} from "./checks.js";
 
 // biome-ignore lint/complexity/noBannedTypes: test mock callback requires loose typing
 type ExecCallback = Function;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { SkillFile } from "../../skill-io.ts";
-import { fixCompatibility } from "./compatibility.ts";
+import type { SkillFile } from "../../skill-io.js";
+import { fixCompatibility } from "./compatibility.js";
 
 function makeSkillFile(frontmatter: Record<string, unknown>): SkillFile {
 	const fmLines = Object.entries(frontmatter)

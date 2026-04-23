@@ -1,8 +1,8 @@
-import { runFix } from "../fix/index.ts";
-import { formatFixJson } from "../fix/reporters/json.ts";
-import { formatFixTerminal } from "../fix/reporters/terminal.ts";
-import type { FixOptions } from "../fix/types.ts";
-import { formatAndOutput } from "../shared/index.ts";
+import { runFix } from "../fix/index.js";
+import { formatFixJson } from "../fix/reporters/json.js";
+import { formatFixTerminal } from "../fix/reporters/terminal.js";
+import type { FixOptions } from "../fix/types.js";
+import { formatAndOutput } from "../shared/index.js";
 
 interface FixCommandOptions {
 	format?: "terminal" | "json";

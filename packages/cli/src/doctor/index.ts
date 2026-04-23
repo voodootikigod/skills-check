@@ -6,8 +6,8 @@ import {
 	checkPnpm,
 	checkRegistry,
 	checkRegistryFile,
-} from "./checks.ts";
-import type { DoctorOptions, DoctorReport } from "./types.ts";
+} from "./checks.js";
+import type { DoctorOptions, DoctorReport } from "./types.js";
 
 /**
  * Run all doctor checks and return a DoctorReport.

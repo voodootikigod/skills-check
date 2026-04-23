@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { CheckContext, ExtractedUrl } from "../types.ts";
+import type { CheckContext, ExtractedUrl } from "../types.js";
 
 // Mock dns/promises lookup before importing the module under test
 vi.mock("node:dns/promises", () => ({
@@ -7,7 +7,7 @@ vi.mock("node:dns/promises", () => ({
 }));
 
 import { lookup } from "node:dns/promises";
-import { urlChecker } from "./urls.ts";
+import { urlChecker } from "./urls.js";
 
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);

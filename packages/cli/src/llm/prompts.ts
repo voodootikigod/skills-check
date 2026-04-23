@@ -23,18 +23,21 @@ Given a SKILL.md file and information about a version update, produce an updated
 }
 
 /**
- * Escape backticks in untrusted content to prevent markdown code fence breakout.
- * Replaces triple backticks with a visually similar but non-breaking sequence.
+ * Use a fence longer than any backtick run in the untrusted content so the
+ * content can be embedded verbatim without terminating the wrapper block.
  */
-function escapeCodeFence(content: string): string {
-	return content.replace(/`{3,}/g, (match) => "\u0060".repeat(match.length).replace(/`/g, "\\`"));
+function getCodeFence(content: string): string {
+	const matches = content.match(/`+/g);
+	const longestRun = matches ? Math.max(...matches.map((match) => match.length)) : 0;
+	return "`".repeat(Math.max(4, longestRun + 1));
 }
 
 function formatUntrustedMarkdownBlock(label: string, content: string): string {
+	const fence = getCodeFence(content);
 	return `<!-- ${label}_START -->
-\`\`\`\`markdown
-${escapeCodeFence(content)}
-\`\`\`\`
+${fence}markdown
+${content}
+${fence}
 <!-- ${label}_END -->`;
 }
 

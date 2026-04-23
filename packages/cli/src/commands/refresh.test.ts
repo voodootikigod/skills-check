@@ -207,7 +207,7 @@ describe("refreshCommand", () => {
 				summary: "Updated for the latest release.",
 				updatedContent: "updated-content",
 			},
-		});
+		} as never);
 		mockedDiffStats.mockReturnValue({ additions: 2, removals: 1 });
 		mockedFormatDiff.mockReturnValue("@@ diff @@");
 		mockedWriteSkillFile.mockResolvedValue(undefined);
@@ -408,7 +408,10 @@ describe("refreshCommand", () => {
 		expect(code).toBe(0);
 		expect(mockedResolveModel).not.toHaveBeenCalled();
 		expect(mockedGenerateObject).not.toHaveBeenCalled();
-		const errorOutput = vi.mocked(console.error).mock.calls.map((call) => call[0]).join("\n");
+		const errorOutput = vi
+			.mocked(console.error)
+			.mock.calls.map((call) => call[0])
+			.join("\n");
 		expect(errorOutput).toContain("Registry unreachable");
 		expect(errorOutput).toContain('No version data for "missing-package"');
 	});

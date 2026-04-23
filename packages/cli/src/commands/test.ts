@@ -76,12 +76,19 @@ export async function testCommand(dir: string, options: TestCommandOptions): Pro
 		isolationChoice = options.isolation;
 	}
 
-	const isCI = options.ci || (process.env.CI !== undefined && process.env.CI !== "false" && process.env.CI !== "0" && process.env.CI !== "");
+	const isCI =
+		options.ci ||
+		(process.env.CI !== undefined &&
+			process.env.CI !== "false" &&
+			process.env.CI !== "0" &&
+			process.env.CI !== "");
 
 	// In CI, explicit --no-isolation requires --allow-unsafe-local
 	if (isCI && isolationChoice === "local" && !options.allowUnsafeLocal) {
 		console.error(
-			chalk.red("\n  Error: --no-isolation in CI requires --allow-unsafe-local to confirm the risk.\n")
+			chalk.red(
+				"\n  Error: --no-isolation in CI requires --allow-unsafe-local to confirm the risk.\n"
+			)
 		);
 		return 2;
 	}

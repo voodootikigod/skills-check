@@ -3,7 +3,26 @@ import type { AuditChecker, AuditFinding, CheckContext, ExtractedUrl } from "../
 
 const CONCURRENCY_LIMIT = 5;
 const TIMEOUT_MS = 10_000;
+const DNS_TIMEOUT_MS = 5000;
 const PRIVATE_172_RE = /^172\.(1[6-9]|2\d|3[01])\./;
+
+function lookupWithTimeout(hostname: string, timeoutMs: number) {
+	return new Promise<Awaited<ReturnType<typeof lookup>>>((resolve, reject) => {
+		const timer = setTimeout(() => {
+			reject(new Error("DNS lookup timed out"));
+		}, timeoutMs);
+
+		lookup(hostname)
+			.then((result) => {
+				clearTimeout(timer);
+				resolve(result);
+			})
+			.catch((error) => {
+				clearTimeout(timer);
+				reject(error);
+			});
+	});
+}
 
 /**
  * Check if an IP address is private, loopback, link-local, or a cloud metadata endpoint.
@@ -68,15 +87,9 @@ async function isSafeUrl(url: string): Promise<boolean> {
 
 		// Resolve DNS with timeout and check the IP
 		try {
-			const dnsController = new AbortController();
-			const dnsTimer = setTimeout(() => dnsController.abort(), 5_000);
-			try {
-				const result = await lookup(hostname, { signal: dnsController.signal });
-				if (isPrivateIp(result.address)) {
-					return false;
-				}
-			} finally {
-				clearTimeout(dnsTimer);
+			const result = await lookupWithTimeout(hostname, DNS_TIMEOUT_MS);
+			if (isPrivateIp(result.address)) {
+				return false;
 			}
 		} catch {
 			// DNS resolution failed or timed out — allow fetch to fail naturally

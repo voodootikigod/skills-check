@@ -11,7 +11,7 @@ function groupByLevel(findings: LintFinding[]): Map<LintFinding["level"], LintFi
 }
 
 function escapeCell(value: string): string {
-	return value.replace(/\|/g, "\\|");
+	return value.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 }
 
 export function formatLintMarkdown(report: LintReport): string {

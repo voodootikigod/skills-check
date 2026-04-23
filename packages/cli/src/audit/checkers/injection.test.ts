@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { CheckContext } from "../types.ts";
-import { injectionChecker } from "./injection.ts";
+import type { CheckContext } from "../types.js";
+import { injectionChecker } from "./injection.js";
 
 function makeContext(raw: string): CheckContext {
 	return {

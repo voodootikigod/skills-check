@@ -1,6 +1,8 @@
 import { execFile } from "node:child_process";
 import type { IsolationExecuteOptions, IsolationProvider, IsolationResult } from "../types.js";
 
+const ARG_SPLIT_RE = /\s+/;
+
 /**
  * Local passthrough provider — runs the command directly in the current process.
  * No isolation. Used as the final fallback when no container runtime is available.
@@ -21,7 +23,7 @@ export class LocalProvider implements IsolationProvider {
 	}
 
 	async execute(options: IsolationExecuteOptions): Promise<IsolationResult> {
-		const args = options.argv ?? ["skills-check", ...options.command.split(/\s+/)];
+		const args = options.argv ?? ["skills-check", ...options.command.split(ARG_SPLIT_RE)];
 
 		const result = await new Promise<{ exitCode: number; stdout: string; stderr: string }>(
 			(resolve) => {

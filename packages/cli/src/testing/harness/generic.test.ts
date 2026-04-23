@@ -23,7 +23,7 @@ vi.mock("node:fs/promises", async () => {
 });
 
 import { execFile } from "node:child_process";
-import { GenericHarness, parseCommandTemplate } from "./generic.ts";
+import { GenericHarness, parseCommandTemplate } from "./generic.js";
 
 const mockedExecFile = vi.mocked(execFile);
 

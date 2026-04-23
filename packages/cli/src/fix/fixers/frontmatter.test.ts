@@ -5,8 +5,8 @@ vi.mock("node:child_process", () => ({
 }));
 
 import { execFile } from "node:child_process";
-import type { SkillFile } from "../../skill-io.ts";
-import { fixFrontmatter } from "./frontmatter.ts";
+import type { SkillFile } from "../../skill-io.js";
+import { fixFrontmatter } from "./frontmatter.js";
 
 // biome-ignore lint/complexity/noBannedTypes: test mock callback requires loose typing
 type ExecCallback = Function;

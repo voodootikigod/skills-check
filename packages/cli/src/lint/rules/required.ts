@@ -48,15 +48,7 @@ export function checkRequired(file: SkillFile): LintFinding[] {
 			message: "Missing required field: description",
 			fixable: false,
 		});
-	} else if (typeof fm.description !== "string") {
-		findings.push({
-			file: file.path,
-			field: "description",
-			level: "error",
-			message: `Field 'description' must be a string, got ${typeof fm.description}`,
-			fixable: false,
-		});
-	} else {
+	} else if (typeof fm.description === "string") {
 		const descLen = fm.description.trim().length;
 		if (descLen > 1024) {
 			findings.push({
@@ -67,6 +59,14 @@ export function checkRequired(file: SkillFile): LintFinding[] {
 				fixable: false,
 			});
 		}
+	} else {
+		findings.push({
+			file: file.path,
+			field: "description",
+			level: "error",
+			message: `Field 'description' must be a string, got ${typeof fm.description}`,
+			fixable: false,
+		});
 	}
 
 	return findings;
