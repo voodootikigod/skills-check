@@ -23,6 +23,22 @@ Given a SKILL.md file and information about a version update, produce an updated
 }
 
 /**
+ * Escape backticks in untrusted content to prevent markdown code fence breakout.
+ * Replaces triple backticks with a visually similar but non-breaking sequence.
+ */
+function escapeCodeFence(content: string): string {
+	return content.replace(/`{3,}/g, (match) => "\u0060".repeat(match.length).replace(/`/g, "\\`"));
+}
+
+function formatUntrustedMarkdownBlock(label: string, content: string): string {
+	return `<!-- ${label}_START -->
+\`\`\`\`markdown
+${escapeCodeFence(content)}
+\`\`\`\`
+<!-- ${label}_END -->`;
+}
+
+/**
  * Build the user prompt for a specific skill file refresh.
  */
 export function buildUserPrompt(params: {
@@ -33,7 +49,7 @@ export function buildUserPrompt(params: {
 	changelog: string | null;
 }): string {
 	const changelogSection = params.changelog
-		? `## Changelog (${params.fromVersion} → ${params.toVersion})\n\n${params.changelog}`
+		? `## Changelog (${params.fromVersion} → ${params.toVersion})\n\n${formatUntrustedMarkdownBlock("CHANGELOG", params.changelog)}`
 		: "## Changelog\n\nNo changelog available. Apply the version bump and only make changes you are confident about.";
 
 	return `## Product
@@ -46,9 +62,7 @@ ${changelogSection}
 
 ## Current SKILL.md Content
 
-\`\`\`markdown
-${params.skillContent}
-\`\`\`
+${formatUntrustedMarkdownBlock("SKILL_CONTENT", params.skillContent)}
 
 Update this skill file to reflect the version change from ${params.fromVersion} to ${params.toVersion}. Return the full updated content.`;
 }

@@ -27,8 +27,13 @@ function isPrivateIp(ip: string): boolean {
 	if (ip.startsWith("169.254.")) {
 		return true;
 	}
-	// IPv6 loopback and link-local
+	// IPv6 loopback, link-local, and unique local (ULA)
 	if (ip === "::1" || ip.startsWith("fe80:") || ip === "::") {
+		return true;
+	}
+	// IPv6 ULA (fc00::/7 = fc00:: through fdff::)
+	const lowerIp = ip.toLowerCase();
+	if (lowerIp.startsWith("fc") || lowerIp.startsWith("fd")) {
 		return true;
 	}
 	return false;
@@ -61,14 +66,20 @@ async function isSafeUrl(url: string): Promise<boolean> {
 			return false;
 		}
 
-		// Resolve DNS and check the IP
+		// Resolve DNS with timeout and check the IP
 		try {
-			const result = await lookup(hostname);
-			if (isPrivateIp(result.address)) {
-				return false;
+			const dnsController = new AbortController();
+			const dnsTimer = setTimeout(() => dnsController.abort(), 5_000);
+			try {
+				const result = await lookup(hostname, { signal: dnsController.signal });
+				if (isPrivateIp(result.address)) {
+					return false;
+				}
+			} finally {
+				clearTimeout(dnsTimer);
 			}
 		} catch {
-			// DNS resolution failed — allow fetch to fail naturally
+			// DNS resolution failed or timed out — allow fetch to fail naturally
 		}
 
 		return true;

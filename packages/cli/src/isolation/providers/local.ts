@@ -1,9 +1,11 @@
-import { exec } from "node:child_process";
+import { execFile } from "node:child_process";
 import type { IsolationExecuteOptions, IsolationProvider, IsolationResult } from "../types.js";
 
 /**
  * Local passthrough provider — runs the command directly in the current process.
  * No isolation. Used as the final fallback when no container runtime is available.
+ *
+ * Uses execFile with explicit args to prevent shell injection from options.command.
  */
 export class LocalProvider implements IsolationProvider {
 	readonly name = "local" as const;
@@ -19,12 +21,13 @@ export class LocalProvider implements IsolationProvider {
 	}
 
 	async execute(options: IsolationExecuteOptions): Promise<IsolationResult> {
-		const fullCommand = `npx skills-check ${options.command}`;
+		const args = options.argv ?? ["skills-check", ...options.command.split(/\s+/)];
 
 		const result = await new Promise<{ exitCode: number; stdout: string; stderr: string }>(
 			(resolve) => {
-				exec(
-					fullCommand,
+				execFile(
+					"npx",
+					args,
 					{
 						cwd: options.skillsDir,
 						timeout: options.timeout * 1000,

@@ -24,7 +24,7 @@ async function ensureCacheDir(): Promise<void> {
 		return;
 	}
 	try {
-		await mkdir(getCacheDir(), { recursive: true });
+		await mkdir(getCacheDir(), { recursive: true, mode: 0o700 });
 		dirEnsured = true;
 	} catch {
 		// Cache dir creation failed — will fall through to in-memory only

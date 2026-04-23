@@ -1,37 +1,72 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ScannedSkill } from "../types.js";
 
-// Mock dependencies to avoid filesystem/network
-vi.mock("../scanner.js", () => ({
-	scanSkills: vi.fn(),
-	groupSkills: vi.fn(),
+const {
+	mockClose,
+	mockCreateInterface,
+	mockGroupSkills,
+	mockQuestion,
+	mockSaveRegistry,
+	mockScanSkills,
+} = vi.hoisted(() => {
+	const question = vi.fn();
+	const close = vi.fn();
+
+	return {
+		mockClose: close,
+		mockCreateInterface: vi.fn(() => ({
+			question,
+			close,
+		})),
+		mockGroupSkills: vi.fn(),
+		mockQuestion: question,
+		mockSaveRegistry: vi.fn(),
+		mockScanSkills: vi.fn(),
+	};
+});
+
+vi.mock("node:readline/promises", () => ({
+	createInterface: mockCreateInterface,
 }));
 
 vi.mock("../registry.js", () => ({
-	saveRegistry: vi.fn(),
+	saveRegistry: mockSaveRegistry,
+}));
+
+vi.mock("../scanner.js", () => ({
+	groupSkills: mockGroupSkills,
+	scanSkills: mockScanSkills,
 }));
 
 import { saveRegistry } from "../registry.js";
 import { groupSkills, scanSkills } from "../scanner.js";
-import type { ScannedSkill } from "../types.js";
 import { initCommand } from "./init.js";
 
-const mockedScanSkills = vi.mocked(scanSkills);
 const mockedGroupSkills = vi.mocked(groupSkills);
 const mockedSaveRegistry = vi.mocked(saveRegistry);
+const mockedScanSkills = vi.mocked(scanSkills);
 
-function makeSkill(overrides?: Partial<ScannedSkill>): ScannedSkill {
+const FIXED_DATE = new Date("2026-04-23T12:00:00.000Z");
+const FIXED_ISO = FIXED_DATE.toISOString();
+
+function makeSkill(name: string, productVersion?: string): ScannedSkill {
 	return {
-		name: "nextjs-routing",
-		path: "./skills/nextjs-routing/SKILL.md",
-		productVersion: "14.0.0",
-		...overrides,
+		name,
+		path: `/skills/${name}/SKILL.md`,
+		...(productVersion ? { productVersion } : {}),
 	};
 }
 
 describe("initCommand", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.useFakeTimers();
+		vi.setSystemTime(FIXED_DATE);
+		mockedScanSkills.mockResolvedValue([]);
+		mockedGroupSkills.mockReturnValue(new Map());
 		mockedSaveRegistry.mockResolvedValue("skills-check.json");
+		mockQuestion.mockReset();
+		mockQuestion.mockResolvedValue("");
 		vi.spyOn(console, "log").mockImplementation(() => {
 			/* intentionally empty */
 		});
@@ -41,125 +76,127 @@ describe("initCommand", () => {
 	});
 
 	afterEach(() => {
+		vi.useRealTimers();
 		vi.restoreAllMocks();
 	});
 
-	it("returns 2 when no SKILL.md files found", async () => {
-		mockedScanSkills.mockResolvedValue([]);
+	it("returns 2 when no skills are found", async () => {
 		const code = await initCommand("./skills", { yes: true });
+
 		expect(code).toBe(2);
+		expect(mockedScanSkills).toHaveBeenCalledWith("./skills");
+		expect(mockedSaveRegistry).not.toHaveBeenCalled();
 	});
 
-	it("returns 2 when no products can be mapped", async () => {
-		// Skill with unknown name won't auto-detect
-		mockedScanSkills.mockResolvedValue([
-			makeSkill({ name: "unknown-thing", productVersion: "1.0.0" }),
-		]);
+	it("creates a registry in non-interactive mode and merges duplicate package mappings", async () => {
+		const aiCore = makeSkill("ai-sdk-core", "1.0.0");
+		const aiTools = makeSkill("ai-sdk-tools", "1.0.0");
+		const sandboxAlpha = makeSkill("vercel-sandbox-alpha", "2.0.0");
+		const sandboxBeta = makeSkill("sandbox-beta", "2.0.0");
+		const docsOnly = makeSkill("docs-only");
+
+		mockedScanSkills.mockResolvedValue([aiCore, aiTools, sandboxAlpha, sandboxBeta, docsOnly]);
 		mockedGroupSkills.mockReturnValue(
-			new Map([["unknown-thing", [makeSkill({ name: "unknown-thing", productVersion: "1.0.0" })]]])
+			new Map([
+				["ai-sdk", [aiCore, aiTools]],
+				["vercel-sandbox", [sandboxAlpha]],
+				["sandbox", [sandboxBeta]],
+			])
 		);
-		const code = await initCommand("./skills", { yes: true });
-		expect(code).toBe(2);
-	});
+		mockedSaveRegistry.mockResolvedValue("/tmp/skills-check.json");
 
-	it("auto-detects known packages in non-interactive mode", async () => {
-		const skill = makeSkill({ name: "nextjs-routing", productVersion: "14.0.0" });
-		mockedScanSkills.mockResolvedValue([skill]);
-		mockedGroupSkills.mockReturnValue(new Map([["nextjs", [skill]]]));
+		const code = await initCommand("./skills", { output: "/tmp/skills-check.json", yes: true });
 
-		const code = await initCommand("./skills", { yes: true });
 		expect(code).toBe(0);
+		expect(mockedGroupSkills).toHaveBeenCalledWith([aiCore, aiTools, sandboxAlpha, sandboxBeta]);
 		expect(mockedSaveRegistry).toHaveBeenCalledWith(
 			expect.objectContaining({
-				products: expect.objectContaining({
-					nextjs: expect.objectContaining({
+				$schema: "https://skillscheck.ai/schema.json",
+				lastCheck: FIXED_ISO,
+				products: {
+					"ai-sdk": {
+						displayName: "Vercel AI SDK",
+						package: "ai",
+						verifiedAt: FIXED_ISO,
+						verifiedVersion: "1.0.0",
+						skills: ["ai-sdk-core", "ai-sdk-tools"],
+					},
+					"vercel-sandbox": {
+						displayName: "Vercel Sandbox",
+						package: "@vercel/sandbox",
+						verifiedAt: FIXED_ISO,
+						verifiedVersion: "2.0.0",
+						skills: ["vercel-sandbox-alpha", "sandbox-beta"],
+					},
+				},
+				version: 1,
+			}),
+			"/tmp/skills-check.json"
+		);
+	});
+
+	it("returns 2 in non-interactive mode when nothing can be auto-detected", async () => {
+		const unknownSkill = makeSkill("custom-tool", "3.0.0");
+
+		mockedScanSkills.mockResolvedValue([unknownSkill]);
+		mockedGroupSkills.mockReturnValue(new Map([["custom-tool", [unknownSkill]]]));
+
+		const code = await initCommand("./skills", { yes: true });
+
+		expect(code).toBe(2);
+		expect(mockedSaveRegistry).not.toHaveBeenCalled();
+	});
+
+	it("uses interactive defaults when the user accepts detected values", async () => {
+		const nextSkill = makeSkill("nextjs-app-router", "15.0.0");
+
+		mockedScanSkills.mockResolvedValue([nextSkill]);
+		mockedGroupSkills.mockReturnValue(new Map([["nextjs", [nextSkill]]]));
+		mockQuestion.mockResolvedValueOnce("").mockResolvedValueOnce("");
+
+		const code = await initCommand("./skills", {});
+
+		expect(code).toBe(0);
+		expect(mockCreateInterface).toHaveBeenCalledTimes(1);
+		expect(mockQuestion).toHaveBeenNthCalledWith(1, "    npm package [next]: ");
+		expect(mockQuestion).toHaveBeenNthCalledWith(2, "    display name [Next.js]: ");
+		expect(mockClose).toHaveBeenCalledTimes(1);
+		expect(mockedSaveRegistry).toHaveBeenCalledWith(
+			expect.objectContaining({
+				products: {
+					nextjs: {
 						displayName: "Next.js",
 						package: "next",
-						verifiedVersion: "14.0.0",
-					}),
-				}),
+						verifiedAt: FIXED_ISO,
+						verifiedVersion: "15.0.0",
+						skills: ["nextjs-app-router"],
+					},
+				},
 			}),
 			undefined
 		);
 	});
 
-	it("saves to custom output path", async () => {
-		const skill = makeSkill({ name: "nextjs-routing", productVersion: "14.0.0" });
-		mockedScanSkills.mockResolvedValue([skill]);
-		mockedGroupSkills.mockReturnValue(new Map([["nextjs", [skill]]]));
+	it("returns 2 in interactive mode when the user skips the only unmapped product", async () => {
+		const customSkill = makeSkill("custom-tool", "4.0.0");
 
-		await initCommand("./skills", { yes: true, output: "custom.json" });
-		expect(mockedSaveRegistry).toHaveBeenCalledWith(expect.anything(), "custom.json");
+		mockedScanSkills.mockResolvedValue([customSkill]);
+		mockedGroupSkills.mockReturnValue(new Map([["custom-tool", [customSkill]]]));
+		mockQuestion.mockResolvedValueOnce("   ");
+
+		const code = await initCommand("./skills", {});
+
+		expect(code).toBe(2);
+		expect(mockQuestion).toHaveBeenCalledTimes(1);
+		expect(mockClose).toHaveBeenCalledTimes(1);
+		expect(mockedSaveRegistry).not.toHaveBeenCalled();
 	});
 
-	it("skips skills without product-version", async () => {
-		const withVersion = makeSkill({ name: "nextjs-routing", productVersion: "14.0.0" });
-		const withoutVersion = makeSkill({ name: "general-tips", productVersion: undefined });
-		mockedScanSkills.mockResolvedValue([withVersion, withoutVersion]);
-		mockedGroupSkills.mockReturnValue(new Map([["nextjs", [withVersion]]]));
+	it("propagates scan errors for unreadable directories", async () => {
+		mockedScanSkills.mockRejectedValue(new Error("Cannot read skills directory: /missing"));
 
-		await initCommand("./skills", { yes: true });
-
-		const logCalls = vi.mocked(console.log).mock.calls.map((c) => String(c[0]));
-		expect(logCalls.some((c) => c.includes("Skipping 1 without"))).toBe(true);
-	});
-
-	it("merges skills that map to the same npm package", async () => {
-		const skill1 = makeSkill({ name: "nextjs-routing", productVersion: "14.0.0" });
-		const skill2 = makeSkill({ name: "nextjs-api", productVersion: "14.0.0" });
-		mockedScanSkills.mockResolvedValue([skill1, skill2]);
-		mockedGroupSkills.mockReturnValue(
-			new Map([
-				["nextjs", [skill1]],
-				["nextjs-api", [skill2]],
-			])
+		await expect(initCommand("/missing", { yes: true })).rejects.toThrow(
+			"Cannot read skills directory: /missing"
 		);
-
-		const code = await initCommand("./skills", { yes: true });
-		expect(code).toBe(0);
-
-		// Both skills should be merged under nextjs since they map to "next" package
-		const savedRegistry = mockedSaveRegistry.mock.calls[0][0];
-		const nextjsProduct = savedRegistry.products.nextjs;
-		expect(nextjsProduct).toBeDefined();
-		expect(nextjsProduct.skills).toContain("nextjs-routing");
-		expect(nextjsProduct.skills).toContain("nextjs-api");
-	});
-
-	it("creates registry with correct schema", async () => {
-		const skill = makeSkill({ name: "nextjs-routing", productVersion: "14.0.0" });
-		mockedScanSkills.mockResolvedValue([skill]);
-		mockedGroupSkills.mockReturnValue(new Map([["nextjs", [skill]]]));
-
-		await initCommand("./skills", { yes: true });
-
-		const savedRegistry = mockedSaveRegistry.mock.calls[0][0];
-		expect(savedRegistry.$schema).toBe("https://skillscheck.ai/schema.json");
-		expect(savedRegistry.version).toBe(1);
-		expect(savedRegistry.lastCheck).toBeDefined();
-	});
-
-	it("auto-detects ai-sdk package", async () => {
-		const skill = makeSkill({ name: "ai-sdk-basics", productVersion: "3.0.0" });
-		mockedScanSkills.mockResolvedValue([skill]);
-		mockedGroupSkills.mockReturnValue(new Map([["ai-sdk", [skill]]]));
-
-		await initCommand("./skills", { yes: true });
-
-		const savedRegistry = mockedSaveRegistry.mock.calls[0][0];
-		expect(savedRegistry.products["ai-sdk"]).toBeDefined();
-		expect(savedRegistry.products["ai-sdk"].package).toBe("ai");
-		expect(savedRegistry.products["ai-sdk"].displayName).toBe("Vercel AI SDK");
-	});
-
-	it("auto-detects turborepo package", async () => {
-		const skill = makeSkill({ name: "turborepo", productVersion: "2.0.0" });
-		mockedScanSkills.mockResolvedValue([skill]);
-		mockedGroupSkills.mockReturnValue(new Map([["turborepo", [skill]]]));
-
-		await initCommand("./skills", { yes: true });
-
-		const savedRegistry = mockedSaveRegistry.mock.calls[0][0];
-		expect(savedRegistry.products.turborepo.package).toBe("turbo");
 	});
 });
