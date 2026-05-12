@@ -41,20 +41,20 @@
   },
   "homepage": "https://skillscheck.ai",
   "dependencies": {
-    "ai": "^6.0.0",
+    "ai": "^6.0.177",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
-    "diff": "^8.0.0",
+    "diff": "^9.0.0",
     "gray-matter": "^4.0.3",
     "js-tiktoken": "^1.0.21",
     "js-yaml": "^4.1.1",
-    "semver": "^7.7.0",
-    "zod": "^3.24.0"
+    "semver": "^7.8.0",
+    "zod": "^4.4.3"
   },
   "optionalDependencies": {
-    "@ai-sdk/anthropic": "^3.0.0",
-    "@ai-sdk/google": "^3.0.0",
-    "@ai-sdk/openai": "^3.0.0"
+    "@ai-sdk/anthropic": "^3.0.76",
+    "@ai-sdk/google": "^3.0.72",
+    "@ai-sdk/openai": "^3.0.63"
   },
   "devDependencies": {
     "@skills-check/schema": "workspace:*",
